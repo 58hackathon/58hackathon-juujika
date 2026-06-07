@@ -1,7 +1,9 @@
 import type { Screen } from "./routes/screenTypes";
+import { ItemCard } from "./components/ItemCard";
 
 function App() {
   const currentScreen: Screen = "home";
+  const ItemCardProps: ItemCard = { ItemCard } 
 
   return (
     <main>
