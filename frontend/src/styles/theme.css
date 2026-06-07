@@ -1,0 +1,10 @@
+:root {
+  --color-primary: #0757ff;
+  --color-accent: #b7ff16;
+  --color-text: #111111;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-surface: #ffffff;
+  --radius-card: 8px;
+}
+
