@@ -15,8 +15,8 @@ function ItemCard({ item }: ItemCardProps) {
     return (
         <article className="item-card">
 
-            <div className="item-card__imag-area">
-                <img className="item-card__image" src="{item.imageUrl}" alt="" />
+            <div className="item-card__image-area">
+                <img className="item-card__image" src={item.imageUrl} alt="" />
 
                 <div className="item-card__likes">
                     <span>♡</span>
@@ -29,7 +29,12 @@ function ItemCard({ item }: ItemCardProps) {
                 </span>
 
                 <h2 className="item-card__title">{item.title}</h2>
-
+                <p className="item-card__wanted">
+                    希望: {item.wantedItem}
+                </p>
+                <p className="item-card__owner">
+                    by {item.ownerName}
+                </p>
                 <div className="item-card__bottom">
                     <div className="item-card__price">¥25,000</div>
 
