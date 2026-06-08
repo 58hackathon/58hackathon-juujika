@@ -1,21 +1,15 @@
 import type { Screen } from "./routes/screenTypes";
 import HomeScreen from "./screens/HomeScreen";
+import "./App.css";
 
 function App() {
   const currentScreen: Screen = "home";
 
   return (
-    <main>
-      <h1>わらしべ</h1>
-
+    <main className="app-shell" data-current-screen={currentScreen}>
       <HomeScreen />
-      
-      <h2>わらしべ長者とは</h2>
-      
-      <p>Current screen: {currentScreen}</p>
     </main>
   );
 }
 
 export default App;
-
