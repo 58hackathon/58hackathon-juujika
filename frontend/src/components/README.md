@@ -7,7 +7,7 @@
 ```txt
 BottomNav.tsx
 Button.tsx
-ItemCard.tsx
+
 StatusBadge.tsx
 StepIndicator.tsx
 ```

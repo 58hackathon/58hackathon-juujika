@@ -1,9 +1,13 @@
+import ItemCard from "../components/ItemCard";
+import { demoItems } from "../features/items/itemData";
+
 function HomeScreen() {
     return (
         <section>
-            <h1>わらしべ長者</h1>
-            <p>交換したいアイテムを見つけよう</p>
+        {demoItems.map((item) => (
+            <ItemCard key={item.id} item={item} />
+        ))}
         </section>
-    )
-};
+    );
+}
 export default HomeScreen;
