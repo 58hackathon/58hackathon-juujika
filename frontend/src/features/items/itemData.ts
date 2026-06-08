@@ -13,6 +13,7 @@ export const demoItems: Item[] = [
     imageUrl: "/images/demo/air-force-1.png",
     likes: 72,
     createdAt: "2026-06-08T10:00:00.000Z",
+    price: 25000, 
   },
   {
     id: "item_2",
@@ -26,6 +27,7 @@ export const demoItems: Item[] = [
     imageUrl: "/images/demo/1-1.webp",
     likes: 34,
     createdAt: "2026-06-08T11:00:00.000Z",
+    price: 7800, 
   },
 ];
 

@@ -7,26 +7,28 @@ type ItemCardProps = {
 
 function ItemCard({ item }: ItemCardProps) {
     const statusLabel = {
-    available: "募集中",
-    trading: "交渉中",
-    completed: "成立",
+        available: "募集中",
+        trading: "交渉中",
+        completed: "成立",
     }[item.status];
 
     return (
         <article className="item-card">
-
             <div className="item-card__image-area">
-                <img className="item-card__image" src={item.imageUrl} alt="" />
+                <img className="item-card__image" src={item.imageUrl} alt={item.title} />
 
                 <div className="item-card__likes">
-                    <span>♡</span>
+                    <span aria-hidden="true">♡</span>
                     <span>{item.likes}</span>
                 </div>
             </div>
             <div className="item-card__body">
-                <span className={`item-card__status item-card__status--${item.status}`}>
-                    {statusLabel}
-                </span>
+                <div className="item-card__meta">
+                    <span className={`item-card__status item-card__status--${item.status}`}>
+                        {statusLabel}
+                    </span>
+                    <span className="item-card__category">{item.category}</span>
+                </div>
 
                 <h2 className="item-card__title">{item.title}</h2>
                 <p className="item-card__wanted">
@@ -36,9 +38,13 @@ function ItemCard({ item }: ItemCardProps) {
                     by {item.ownerName}
                 </p>
                 <div className="item-card__bottom">
-                    <div className="item-card__price">¥25,000</div>
+                    <div className="item-card__price">
+                        ¥{item.price.toLocaleString()}
+                    </div>
 
-                    <button className="item-card__favorite" type="button">⭐︎</button>
+                    <button className="item-card__favorite" aria-label={`${item.title}をお気に入りに追加`} type="button">
+                        ☆
+                    </button>
                 </div>
             </div>
         </article>
