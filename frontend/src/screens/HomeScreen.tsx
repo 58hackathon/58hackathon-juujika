@@ -10,5 +10,4 @@ function HomeScreen() {
         </section>
     );
 }
-
 export default HomeScreen;

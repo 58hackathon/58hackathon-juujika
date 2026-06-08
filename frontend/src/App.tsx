@@ -6,6 +6,9 @@ function App() {
   return (
     <main>
       <h1>わらしべ</h1>
+
+      <h2>わらしべ長者とは</h2>
+
       <p>Current screen: {currentScreen}</p>
     </main>
   );
