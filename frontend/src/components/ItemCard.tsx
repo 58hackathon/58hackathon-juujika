@@ -16,7 +16,7 @@ function ItemCard({ item }: ItemCardProps) {
         <article className="item-card">
 
             <div className="item-card__image-area">
-                <img className="item-card__image" src={item.imageUrl} alt="" />
+                <img className="item-card__image" src={item.imageUrl} alt={item.title} />
 
                 <div className="item-card__likes">
                     <span>♡</span>
