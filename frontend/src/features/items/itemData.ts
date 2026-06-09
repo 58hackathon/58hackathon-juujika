@@ -29,5 +29,19 @@ export const demoItems: Item[] = [
     createdAt: "2026-06-08T11:00:00.000Z",
     price: 7800, 
   },
+  {
+    id: "item_3",
+    title: "Bluetooth スピーカー",
+    description: "部屋で使っていました。動作確認済みです。",
+    ownerId: "user_3",
+    ownerName: "sota_21",
+    wantedItem: "イヤホン、モバイルバッテリー、本",
+    category: "家電",
+    status: "completed",
+    imageUrl: "/images/demo/speaker-demo.jpg",
+    likes: 18,
+    createdAt: "2026-06-08T12:00:00.000Z",
+    price: 4200,
+  },
 ];
 
