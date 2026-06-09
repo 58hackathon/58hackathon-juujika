@@ -4,3 +4,16 @@
     linear-gradient(180deg, rgba(7, 87, 255, 0.08), rgba(255, 255, 255, 0) 260px),
     #f6f7fb;
 }
+.placeholder-screen {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 40px 16px 96px;
+}
+
+.placeholder-screen h1 {
+  margin: 0 0 12px;
+}
+
+.placeholder-screen p {
+  color: var(--color-muted);
+}

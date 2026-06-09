@@ -5,7 +5,7 @@
 例:
 
 ```txt
-BottomNav.tsx
+
 Button.tsx
 
 StatusBadge.tsx

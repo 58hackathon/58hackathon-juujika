@@ -32,9 +32,6 @@ function HomeScreen({ onSelectItem }: HomeScreenProps) {
                             使わなくなったものを、ほしいものへ交換しよう。
                         </p>
                     </div>
-                    <button className="home-screen__post-button" type="button">
-                        出品
-                    </button>
                 </div>
             </header>
 
