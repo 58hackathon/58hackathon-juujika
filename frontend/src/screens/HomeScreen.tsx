@@ -1,11 +1,14 @@
+import { useState } from "react";
 import ItemCard from "../components/ItemCard";
 import { demoItems } from "../features/items/itemData";
 import "./HomeScreen.css";
-import { useState } from "react";
 
+type HomeScreenProps = {
+    onSelectItem: (itemId: string) => void;
+};
 const categories = ["すべて", "ファッション", "バッグ", "家電"];
 
-function HomeScreen() {
+function HomeScreen({ onSelectItem }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
     const [searchText, setSearchText] = useState("");
     const filteredItems = demoItems.filter((item) => {
@@ -72,7 +75,11 @@ function HomeScreen() {
             {filteredItems.length > 0 ? (
                 <div className="home-screen__grid">
                     {filteredItems.map((item) => (
-                        <ItemCard key={item.id} item={item} />
+                        <ItemCard
+                            key={item.id}
+                            item={item}
+                            onSelectItem={onSelectItem}
+                        />
                     ))}
                 </div>
             ) : (

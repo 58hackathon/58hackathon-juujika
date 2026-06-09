@@ -3,9 +3,10 @@ import "./ItemCard.css";
 
 type ItemCardProps = {
     item: Item;
+    onSelectItem: (itemId: string) => void;
 };
 
-function ItemCard({ item }: ItemCardProps) {
+function ItemCard({ item, onSelectItem }: ItemCardProps) {
     const statusLabel = {
         available: "募集中",
         trading: "交渉中",
@@ -44,6 +45,13 @@ function ItemCard({ item }: ItemCardProps) {
 
                     <button className="item-card__favorite" aria-label={`${item.title}をお気に入りに追加`} type="button">
                         ☆
+                    </button>
+                    <button
+                        className="item-card__detail-button"
+                        onClick={() => onSelectItem(item.id)}
+                        type="button"
+                    >
+                    詳細
                     </button>
                 </div>
             </div>
