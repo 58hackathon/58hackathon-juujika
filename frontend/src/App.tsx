@@ -19,10 +19,13 @@ function App() {
 
   return (
     <main className="app-shell" data-current-screen={currentScreen}>
-      <AppNav
+      {currentScreen !== "itemDetail" && (
+        <AppNav
         currentScreen={currentScreen}
         onNavigate={handleNavigate}
-      />
+        />
+      )}
+      
 
       {currentScreen === "home" && (
         <HomeScreen

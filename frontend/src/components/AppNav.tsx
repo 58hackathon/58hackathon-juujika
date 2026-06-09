@@ -40,7 +40,7 @@ function AppNav({ currentScreen, onNavigate }: AppNavProps) {
                 onClick={() => onNavigate("profile")}
                 type="button"
             >
-                人
+                <img className="app-nav__profile-image" src="../public/images/demo/e10821c74b533d465ba888ea66daa30f.jpg" alt="profile-image" />
             </button>
         </nav>
     );
