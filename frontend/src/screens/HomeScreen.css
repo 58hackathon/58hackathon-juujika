@@ -130,6 +130,25 @@
     gap: 16px;
 }
 
+.home-screen__empty {
+    padding: 48px 20px;
+    border: 1px dashed var(--color-border);
+    border-radius: 18px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.home-screen__empty p {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.home-screen__empty span {
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
 @media (min-width: 760px) {
     .home-screen {
         padding-top: 40px;
