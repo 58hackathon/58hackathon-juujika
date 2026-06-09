@@ -10,7 +10,7 @@ const navItems: { screen: Screen; label: string }[] = [
     { screen: "home", label: "商品一覧" },
     { screen: "createItem", label: "出品" },
     { screen: "requestList", label: "リクエスト" },
-    { screen: "profile", label: "プロフィール" },
+    { screen: "favorite", label: "お気に入り"},
 ];
 
 function AppNav({ currentScreen, onNavigate }: AppNavProps) {
@@ -30,6 +30,18 @@ function AppNav({ currentScreen, onNavigate }: AppNavProps) {
                     {item.label}
                 </button>
             ))}
+            <button
+                aria-label="プロフィール"
+                className={
+                    currentScreen === "profile"
+                        ? "app-nav__profile app-nav__profile--active"
+                        : "app-nav__profile"
+                }
+                onClick={() => onNavigate("profile")}
+                type="button"
+            >
+                人
+            </button>
         </nav>
     );
 }

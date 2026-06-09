@@ -17,3 +17,27 @@
 .placeholder-screen p {
   color: var(--color-muted);
 }
+.placeholder-screen--profile {
+  position: relative;
+}
+
+.placeholder-screen__back-button {
+  position: absolute;
+  top: 24px;
+  left: 16px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.placeholder-screen--profile h1 {
+  padding-left: 52px;
+}

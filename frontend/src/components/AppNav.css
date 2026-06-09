@@ -60,3 +60,23 @@
         color: var(--color-primary);
     }
 }
+.app-nav__profile {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-text);
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.app-nav__profile--active {
+    background: var(--color-primary);
+}
+
+@media (max-width: 720px) {
+    .app-nav__profile {
+        display: none;
+    }
+}

@@ -5,10 +5,11 @@ import "./HomeScreen.css";
 
 type HomeScreenProps = {
     onSelectItem: (itemId: string) => void;
+    onOpenProfile: () => void;
 };
 const categories = ["すべて", "ファッション", "バッグ", "家電"];
 
-function HomeScreen({ onSelectItem }: HomeScreenProps) {
+function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
     const [searchText, setSearchText] = useState("");
     const filteredItems = demoItems.filter((item) => {
@@ -23,6 +24,14 @@ function HomeScreen({ onSelectItem }: HomeScreenProps) {
 });
     return (
         <section className="home-screen">
+            <button
+                aria-label="プロフィール"
+                className="home-screen__profile-button"
+                onClick={onOpenProfile}
+                type="button"
+            >
+                人
+            </button>
             <header className="home-screen__header">
                 <p className="home-screen__eyebrow">物々交換マーケット</p>
                 <div className="home-screen__title-row">
@@ -84,7 +93,7 @@ function HomeScreen({ onSelectItem }: HomeScreenProps) {
                     <p>該当するアイテムがありません</p>
                     <span>検索ワードやカテゴリを変えてみてください。</span>
                 </div>
-)}
+            )}
         </section>
     );
 }

@@ -30,6 +30,7 @@ function App() {
             setSelectedItemId(itemId);
             setCurrentScreen("itemDetail");
           }}
+          onOpenProfile={() => setCurrentScreen("profile")}
         />
       )}
 
@@ -55,7 +56,15 @@ function App() {
       )}
 
       {currentScreen === "profile" && (
-        <section className="placeholder-screen">
+        <section className="placeholder-screen placeholder-screen--profile">
+          <button
+            className="placeholder-screen__back-button"
+            onClick={() => setCurrentScreen("home")}
+            type="button"
+          >
+            ←
+          </button>
+
           <h1>プロフィール</h1>
           <p>ユーザー情報を表示する画面です。</p>
         </section>
