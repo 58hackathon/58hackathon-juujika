@@ -98,3 +98,4 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     );
 }
 
+export default HomeScreen;
