@@ -1,3 +1,27 @@
+.item-card__status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.item-card__status--available {
+    background: #e9fdf4;
+    color: #047857;
+}
+
+.item-card__status--trading {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.item-card__status--completed {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
 .item-card {
     overflow: hidden;
     border: 1px solid rgba(229, 231, 235, 0.92);
@@ -17,14 +41,12 @@
     aspect-ratio: 1 / 0.78;
     background: #f3f4f6;
 }
-
 .item-card__image  {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
 .item-card__likes {
     position: absolute;
     right: 12px;
@@ -86,23 +108,11 @@
 }
 
 .item-card__title {
-    display: -webkit-box;
-    min-height: 50px;
-    margin: 10px 0 8px;
-    overflow: hidden;
+
+    margin: 10px 0 16px;
     font-size: 18px;
     line-height: 1.4;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
 }
-
-.item-card__wanted,
-.item-card__owner {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .item-card__wanted {
     margin: 0 0 8px;
     color: #4b5563;
@@ -114,6 +124,16 @@
     margin: 0 0 16px;
     color: #6b7280;
     font-size: 13px;
+}
+.item-card__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.item-card__price {
+    font-size: 16px;
+    font-weight: 700;
+
 }
 
 .item-card__bottom {
@@ -130,6 +150,7 @@
 .item-card__favorite {
     width: 40px;
     height: 40px;
+
     border: 1px solid #e5e7eb;
     border-radius: 50%;
     background: #ffffff;
