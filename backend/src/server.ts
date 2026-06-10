@@ -1,3 +1,9 @@
-// Backend entry point placeholder.
-// Express or another HTTP server can be initialized here.
+import "dotenv/config";
 
+import { app } from "./app.js";
+
+const port = Number(process.env.PORT ?? 3000);
+
+app.listen(port, () => {
+  console.log(`Backend server running on http://localhost:${port}`);
+});

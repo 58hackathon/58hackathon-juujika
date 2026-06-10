@@ -72,6 +72,7 @@ function App() {
           <p>ユーザー情報を表示する画面です。</p>
         </section>
       )}
+
     </main>
   );
 }
