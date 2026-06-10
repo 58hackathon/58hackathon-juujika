@@ -30,7 +30,7 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
                 onClick={onOpenProfile}
                 type="button"
             >
-                人
+                <img className="home-screen__profile-image" src="/images/demo/e10821c74b533d465ba888ea66daa30f.jpg" alt=""  />
             </button>
             <header className="home-screen__header">
                 <p className="home-screen__eyebrow">物々交換マーケット</p>
