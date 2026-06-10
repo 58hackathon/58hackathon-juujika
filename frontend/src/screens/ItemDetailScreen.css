@@ -1,0 +1,39 @@
+.item-detail-screen {
+    width: min(100%, 720px);
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.item-detail-screen__back {
+    margin-bottom: 16px;
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.item-detail-screen__image {
+    width: 100%;
+    aspect-ratio: 1 / 0.72;
+    border-radius: 18px;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+
+.item-detail-screen__body {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 18px;
+    background: #ffffff;
+}
+
+.item-detail-screen__category {
+    color: var(--color-muted);
+    font-weight: 800;
+}
+
+.item-detail-screen__price {
+    font-size: 24px;
+    font-weight: 900;
+}
