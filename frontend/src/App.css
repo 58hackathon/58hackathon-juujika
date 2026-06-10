@@ -1,0 +1,43 @@
+.app-shell {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(7, 87, 255, 0.08), rgba(255, 255, 255, 0) 260px),
+    #f6f7fb;
+}
+.placeholder-screen {
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding: 40px 16px 96px;
+}
+
+.placeholder-screen h1 {
+  margin: 0 0 12px;
+}
+
+.placeholder-screen p {
+  color: var(--color-muted);
+}
+.placeholder-screen--profile {
+  position: relative;
+}
+
+.placeholder-screen__back-button {
+  position: absolute;
+  top: 24px;
+  left: 16px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.placeholder-screen--profile h1 {
+  padding-left: 52px;
+}

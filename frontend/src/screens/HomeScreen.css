@@ -1,7 +1,208 @@
 .home-screen {
-    display: grid;
-    gap: 20px;
-    width: min(100%, 420px);
+
+    position: relative;
+    width: min(100%, 960px);
     margin: 0 auto;
-    padding: 24px 16px;
+    padding: 28px 16px 48px;
+}
+
+.home-screen__header {
+    margin-bottom: 20px;
+}
+
+.home-screen__eyebrow {
+    margin: 0 0 8px;
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.home-screen__title-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.home-screen__title {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1.1;
+}
+
+.home-screen__lead {
+    max-width: 520px;
+    margin: 10px 0 0;
+    color: var(--color-muted);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.home-screen__post-button {
+    flex: 0 0 auto;
+    min-width: 76px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-text);
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.home-screen__search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 52px;
+    margin-bottom: 14px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-surface);
+    box-shadow: 0 12px 28px rgba(17, 17, 17, 0.06);
+}
+
+.home-screen__search-icon {
+    color: var(--color-muted);
+    font-size: 20px;
+}
+
+.home-screen__search-input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-text);
+}
+
+.home-screen__search-input::placeholder {
+    color: #9ca3af;
+}
+
+.home-screen__categories {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.home-screen__category {
+    flex: 0 0 auto;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.home-screen__category--active {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
+.home-screen__section-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.home-screen__section-title h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.home-screen__section-title span {
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.home-screen__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.home-screen__empty {
+    padding: 48px 20px;
+    border: 1px dashed var(--color-border);
+    border-radius: 18px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.home-screen__empty p {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.home-screen__empty span {
+    color: var(--color-muted);
+    font-size: 14px;
+}
+
+.home-screen__profile-button {
+    display: none;
+}
+
+@media (min-width: 760px) {
+    .home-screen {
+        padding-top: 40px;
+    }
+
+    .home-screen__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+}
+
+@media (max-width: 520px) {
+    .home-screen__title-row {
+        align-items: center;
+    }
+
+    .home-screen__title {
+        font-size: 30px;
+    }
+
+    .home-screen__lead {
+        font-size: 14px;
+    }
+
+    .home-screen__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .home-screen__profile-button {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--color-text);
+        color: #ffffff;
+        font-weight: 800;
+        box-shadow: 0 10px 24px rgba(31, 41, 55, 0.18);
+    }
+    .home-screen__header {
+        padding-right: 52px;
+    }
+
 }

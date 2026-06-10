@@ -24,15 +24,21 @@
 
 .item-card {
     overflow: hidden;
+    border: 1px solid rgba(229, 231, 235, 0.92);
     border-radius: 18px;
     background-color: #ffffff;
-    box-shadow: 0 8px 24px rgba(17, 17, 17, 0.12);
+    box-shadow: 0 12px 32px rgba(17, 17, 17, 0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    transform: translateY(-4px);
 }
+
+.item-card:hover {
+    box-shadow: 0 18px 44px rgba(17, 17, 17, 0.12);
+    transform: translateY(-3px);
+}
+
 .item-card__image-area {
     position: relative;
-    aspect-ratio: 1 / 0.72;
+    aspect-ratio: 1 / 0.78;
     background: #f3f4f6;
 }
 .item-card__image  {
@@ -55,10 +61,54 @@
     font-size: 13px;
     font-weight: 700;
 }
+
 .item-card__body {
-    padding: 14px;
+    padding: 14px 14px 16px;
 }
+
+.item-card__meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.item-card__status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.item-card__status--available {
+    background: #e9fdf4;
+    color: #047857;
+}
+
+.item-card__status--trading {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.item-card__status--completed {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.item-card__category {
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .item-card__title {
+
     margin: 10px 0 16px;
     font-size: 18px;
     line-height: 1.4;
@@ -83,12 +133,34 @@
 .item-card__price {
     font-size: 16px;
     font-weight: 700;
+
 }
+
+.item-card__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.item-card__price {
+    font-size: 18px;
+    font-weight: 900;
+}
+
 .item-card__favorite {
     width: 40px;
     height: 40px;
-    border: 0;
+
+    border: 1px solid #e5e7eb;
     border-radius: 50%;
-    background: #f3f4f6;
+    background: #ffffff;
+    color: #111111;
     cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.item-card__favorite:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }

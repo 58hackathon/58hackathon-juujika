@@ -11,6 +11,7 @@ export type Item = {
   status: ItemStatus;
   imageUrl: string;
   likes: number;
+  price: number;
   createdAt: string;
 };
 

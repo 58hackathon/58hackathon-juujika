@@ -5,5 +5,6 @@ export type Screen =
   | "requestList"
   | "requestDetail"
   | "createItem"
-  | "profile";
+  | "profile"
+  | "favorite";
 
