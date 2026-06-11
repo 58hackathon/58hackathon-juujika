@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { createItem } from "../features/items/itemApi";
 import "./CreateItemScreen.css";
 
+type CreateItemScreenProps = {
+    onItemCreated: () => void;
+};
 
-function CreateItemScreen() {
+function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
     const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,6 +32,7 @@ function CreateItemScreen() {
             return;
         }
 
+
         const withoutAnythingOk = selectedWantedItems.filter(
             (item) => item !== "なんでもOK!"
         );
@@ -41,6 +46,21 @@ function CreateItemScreen() {
 
         setSelectedWantedItems([...withoutAnythingOk, wantedItem]);
         };
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const formData = new FormData(event.currentTarget);
+
+        await createItem({
+            title: String(formData.get("itemName") ?? ""),
+            category: String(formData.get("category") ?? ""),
+            description: String(formData.get("comment") ?? ""),
+            wantedItem: selectedWantedItems.join("、"),
+            imageUrl: "/images/demo/generated/reading-card-500.png",
+        });
+
+        onItemCreated();
+    };
     return (
         <section className="create-item-screen">
             <header className="create-item-screen__header">商品を出品する</header>
@@ -101,7 +121,7 @@ function CreateItemScreen() {
                     <div className="create-item-form__photo-slot" />
                 </div>
             
-            <div className="create-item-form__description">
+            <form className="create-item-form__description" onSubmit={handleSubmit}>
 
                 <div className="create-item-form__field">
                     <label className="create-item-form__label" htmlFor="itemName">
@@ -122,12 +142,12 @@ function CreateItemScreen() {
                     </label>
                     <select className="create-item-form__select" id="category" name="category">
                         <option value="">選択してください</option>
-                        <option value="fashion">ファッション</option>
-                        <option value="bag">バッグ</option>
-                        <option value="electronics">家電</option>
-                        <option value="coupon">クーポン</option>
-                        <option value="book">本・教材</option>
-                        <option value="other">その他</option>
+                        <option value="ファッション">ファッション</option>
+                        <option value="バッグ">バッグ</option>
+                        <option value="家電">家電</option>
+                        <option value="クーポン">クーポン</option>
+                        <option value="本・教材">本・教材</option>
+                        <option value="その他">その他</option>
                     </select>
                 </div>
 
@@ -182,11 +202,11 @@ function CreateItemScreen() {
                 </div>
 
                 
-                <button className="create-item-form__submit">
+                <button className="create-item-form__submit" type="submit">
                     出品する
                 </button>
                 
-            </div>
+            </form>
 </div>
 
 
@@ -194,4 +214,3 @@ function CreateItemScreen() {
     )
 }
 export default CreateItemScreen;
-
