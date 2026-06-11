@@ -36,7 +36,7 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     return (
         <section className="home-screen">
             <button
-                aria-label="プロフィール"
+                aria-label="マイページ"
                 className="home-screen__profile-button"
                 onClick={onOpenProfile}
                 type="button"

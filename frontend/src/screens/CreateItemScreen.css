@@ -35,6 +35,13 @@
     box-shadow: 0 12px 24px rgba(25, 211, 107, 0.24);
 }
 
+.create-item-form__submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+    transform: none;
+    box-shadow: none;
+}
+
 .create-item-form__submit:hover {
     transform: translateY(-1px);
     box-shadow: 0 16px 28px rgba(25, 211, 107, 0.3);
@@ -212,12 +219,14 @@
     color: #111827;
     font-size: 18px;
     font-weight: 900;
+    transition: 180ms ease;
 }
 
 .create-stepper__line {
     height: 3px;
     border-radius: 999px;
     background: #e5e7eb;
+    transition: background-color 180ms ease;
 }
 
 .create-stepper__item--active {
@@ -230,8 +239,18 @@
     color: #ffffff;
 }
 
+.create-stepper__item--done {
+    color: #118b6f;
+}
+
+.create-stepper__item--done .create-stepper__number {
+    border-color: #118b6f;
+    background: #118b6f;
+    color: #ffffff;
+}
+
 .create-stepper__line--active {
-    background: var(--color-primary);
+    background: linear-gradient(90deg, var(--color-primary), #18d47b);
 }
 
 .create-item-form__wanted-tags {
@@ -262,6 +281,147 @@
 .create-item-form__wanted-tag:hover {
     border-color: var(--color-primary);
 }
+
+.create-complete {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(8px);
+    animation: create-complete-fade-in 180ms ease-out both;
+}
+
+.create-complete__sheet {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    padding: 12px 18px 18px;
+    border: 1px solid rgba(7, 87, 255, 0.14);
+    border-radius: 24px 24px 20px 20px;
+    background: #ffffff;
+    box-shadow: 0 -12px 44px rgba(15, 23, 42, 0.18);
+    animation: create-complete-sheet-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.create-complete__handle {
+    width: 44px;
+    height: 5px;
+    margin: 0 auto 18px;
+    border-radius: 999px;
+    background: #dbe3ef;
+}
+
+.create-complete__summary {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.create-complete__image-wrap {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border: 1px solid #dbe3ef;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.create-complete__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.create-complete__image-fallback {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0757ff, #18d47b);
+}
+
+.create-complete__badge {
+    display: inline-grid;
+    place-items: center;
+    min-height: 24px;
+    margin: 0 0 6px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #e7fbef;
+    color: #118b4f;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.create-complete__sheet h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 18px;
+    line-height: 1.3;
+}
+
+.create-complete__message {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.create-complete__primary {
+    width: 100%;
+    min-height: 52px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(7, 87, 255, 0.22);
+}
+
+.create-complete__primary:active {
+    transform: translateY(1px);
+}
+
+@keyframes create-complete-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes create-complete-sheet-up {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .create-complete,
+    .create-complete__sheet,
+    .create-stepper__number,
+    .create-stepper__line {
+        animation: none;
+        transition: none;
+    }
+}
+
 @media (min-width: 721px) {
     .create-item-screen {
     padding-top: 104px;

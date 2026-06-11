@@ -8,6 +8,12 @@ type CreateItemScreenProps = {
 
 function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+    const [itemName, setItemName] = useState("");
+    const [category, setCategory] = useState("");
+    const [condition, setCondition] = useState("");
+    const [comment, setComment] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isComplete, setIsComplete] = useState(false);
 
     const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,8 +52,54 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
 
         setSelectedWantedItems([...withoutAnythingOk, wantedItem]);
         };
+
+    const hasPhoto = photoUrl !== null;
+    const hasBasicInfo =
+        itemName.trim() !== "" &&
+        category !== "" &&
+        condition !== "" &&
+        comment.trim() !== "";
+    const hasWantedItems = selectedWantedItems.length > 0;
+    const isReadyToSubmit = hasPhoto && hasBasicInfo && hasWantedItems;
+    const activeStep = isComplete
+        ? 4
+        : hasPhoto
+            ? hasBasicInfo
+                ? hasWantedItems
+                    ? 4
+                    : 3
+                : 2
+            : 1;
+
+    const getStepClassName = (step: number) => {
+        const classNames = ["create-stepper__item"];
+
+        if (activeStep === step) {
+            classNames.push("create-stepper__item--active");
+        }
+
+        if (isComplete || activeStep > step) {
+            classNames.push("create-stepper__item--done");
+        }
+
+        return classNames.join(" ");
+    };
+
+    const getStepNumber = (step: number) => {
+        return isComplete || activeStep > step ? "✓" : step;
+    };
+
+    const getLineClassName = (step: number) => {
+        return activeStep > step || isComplete
+            ? "create-stepper__line create-stepper__line--active"
+            : "create-stepper__line";
+    };
+
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!isReadyToSubmit || isSubmitting) return;
+
+        setIsSubmitting(true);
 
         const formData = new FormData(event.currentTarget);
 
@@ -56,39 +108,40 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
             category: String(formData.get("category") ?? ""),
             description: String(formData.get("comment") ?? ""),
             wantedItem: selectedWantedItems.join("、"),
-            imageUrl: "/images/demo/generated/reading-card-500.png",
+            imageUrl: photoUrl ?? "/images/demo/generated/reading-card-500.png",
         });
 
-        onItemCreated();
+        setIsComplete(true);
+        setIsSubmitting(false);
     };
     return (
         <section className="create-item-screen">
             <header className="create-item-screen__header">商品を出品する</header>
 
             <div className="create-stepper">
-                <div className="create-stepper__item create-stepper__item--active">
-                    <span className="create-stepper__number">1</span>
+                <div className={getStepClassName(1)}>
+                    <span className="create-stepper__number">{getStepNumber(1)}</span>
                     <span className="create-stepper__label">写真</span>
                 </div>
 
-                <div className="create-stepper__line" />
+                <div className={getLineClassName(1)} />
 
-                <div className="create-stepper__item">
-                    <span className="create-stepper__number">2</span>
+                <div className={getStepClassName(2)}>
+                    <span className="create-stepper__number">{getStepNumber(2)}</span>
                     <span className="create-stepper__label">情報入力</span>
                 </div>
 
-                <div className="create-stepper__line" />
+                <div className={getLineClassName(2)} />
 
-                <div className="create-stepper__item">
-                    <span className="create-stepper__number">3</span>
+                <div className={getStepClassName(3)}>
+                    <span className="create-stepper__number">{getStepNumber(3)}</span>
                     <span className="create-stepper__label">交換希望</span>
                 </div>
 
-                <div className="create-stepper__line" />
+                <div className={getLineClassName(3)} />
 
-                <div className="create-stepper__item">
-                    <span className="create-stepper__number">4</span>
+                <div className={getStepClassName(4)}>
+                    <span className="create-stepper__number">{getStepNumber(4)}</span>
                     <span className="create-stepper__label">確認</span>
                 </div>
             </div>
@@ -131,7 +184,9 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
                         className="create-item-form__input"
                         id="itemName"
                         name="itemName"
+                        onChange={(event) => setItemName(event.target.value)}
                         type="text"
+                        value={itemName}
                         placeholder="例）NEW ERA リュック"
                     />
                 </div>
@@ -140,7 +195,13 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
                     <label className="create-item-form__label" htmlFor="category">
                         カテゴリ
                     </label>
-                    <select className="create-item-form__select" id="category" name="category">
+                    <select
+                        className="create-item-form__select"
+                        id="category"
+                        name="category"
+                        onChange={(event) => setCategory(event.target.value)}
+                        value={category}
+                    >
                         <option value="">選択してください</option>
                         <option value="ファッション">ファッション</option>
                         <option value="バッグ">バッグ</option>
@@ -155,13 +216,20 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
                     <label className="create-item-form__label" htmlFor="condition">
                         商品の状態
                     </label>
-                    <select className="create-item-form__select" id="condition" name="condition">
+                    <select
+                        className="create-item-form__select"
+                        id="condition"
+                        name="condition"
+                        onChange={(event) => setCondition(event.target.value)}
+                        value={condition}
+                    >
                         <option value="">選択してください</option>
-                        <option value="fashion">未使用に近い</option>
-                        <option value="bag">目立った汚れなし</option>
-                        <option value="electronics">目立った傷や汚れなし</option>
-                        <option value="coupon">やや傷や汚れあり</option>
-                        <option value="book">使用感あり</option>
+                        <option value="新品未使用">新品未使用</option>
+                        <option value="未使用に近い">未使用に近い</option>
+                        <option value="目立った汚れなし">目立った汚れなし</option>
+                        <option value="目立った傷や汚れなし">目立った傷や汚れなし</option>
+                        <option value="やや傷や汚れあり">やや傷や汚れあり</option>
+                        <option value="使用感あり">使用感あり</option>
                     </select>
                 </div>
 
@@ -197,17 +265,57 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
                         className="create-item-form__textarea"
                         id="comment"
                         name="comment"
+                        onChange={(event) => setComment(event.target.value)}
                         placeholder="商品の状態や交換したい理由を書いてください"
+                        value={comment}
                     />
                 </div>
 
                 
-                <button className="create-item-form__submit" type="submit">
-                    出品する
+                <button
+                    className="create-item-form__submit"
+                    disabled={!isReadyToSubmit || isSubmitting}
+                    type="submit"
+                >
+                    {isSubmitting ? "出品中..." : "出品する"}
                 </button>
                 
             </form>
 </div>
+
+            {isComplete && (
+                <div className="create-complete" role="dialog" aria-modal="true" aria-labelledby="createCompleteTitle">
+                    <div className="create-complete__sheet">
+                        <div className="create-complete__handle" />
+
+                        <div className="create-complete__summary">
+                            <div className="create-complete__image-wrap">
+                                {photoUrl ? (
+                                    <img src={photoUrl} alt="" />
+                                ) : (
+                                    <span className="create-complete__image-fallback" />
+                                )}
+                            </div>
+
+                            <div>
+                                <p className="create-complete__badge">出品完了</p>
+                                <h2 id="createCompleteTitle">{itemName}</h2>
+                                <p className="create-complete__message">
+                                    商品一覧に反映されました
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            className="create-complete__primary"
+                            onClick={onItemCreated}
+                            type="button"
+                        >
+                            商品一覧へ
+                        </button>
+                    </div>
+                </div>
+            )}
 
 
         </section>
