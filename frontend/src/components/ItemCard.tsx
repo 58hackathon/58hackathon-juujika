@@ -43,10 +43,6 @@ function ItemCard({ item, onSelectItem }: ItemCardProps) {
                     <div className="item-card__price">
                         ¥{item.price.toLocaleString()}
                     </div>
-
-                    <button className="item-card__favorite" aria-label={`${item.title}をお気に入りに追加`} type="button">
-                        ☆
-                    </button>
                     <button
                         className="item-card__detail-button"
                         onClick={() => onSelectItem(item.id)}
