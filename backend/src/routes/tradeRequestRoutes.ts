@@ -12,4 +12,5 @@ export const tradeRequestRoutes = Router();
 tradeRequestRoutes.get("/", listTradeRequests);
 tradeRequestRoutes.get("/:id", getTradeRequest);
 tradeRequestRoutes.post("/", postTradeRequest);
+tradeRequestRoutes.patch("/:id", patchTradeRequestStatus);
 tradeRequestRoutes.patch("/:id/status", patchTradeRequestStatus);
