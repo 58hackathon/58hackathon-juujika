@@ -24,6 +24,7 @@ function ItemCard({ item, onSelectItem }: ItemCardProps) {
                     <span>{item.likes}</span>
                 </div>
             </div>
+
             <div className="item-card__body">
                 <div className="item-card__meta">
                     <span className={`item-card__status item-card__status--${item.status}`}>

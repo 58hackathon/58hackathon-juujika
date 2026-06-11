@@ -7,7 +7,7 @@ type HomeScreenProps = {
     onSelectItem: (itemId: string) => void;
     onOpenProfile: () => void;
 };
-const categories = ["すべて", "ファッション", "バッグ", "家電"];
+const categories = ["すべて", "ファッション", "バッグ", "家電", "クーポン"];
 
 function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");

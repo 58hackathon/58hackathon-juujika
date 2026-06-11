@@ -154,4 +154,18 @@ export const demoItems: Item[] = [
     price: 25000,
     createdAt: "2026-06-08T14:30:00.000Z",
   },
+  {
+    id: "item_11",
+    title: "図書カード",
+    description: "ずっと財布の中に埋まっていました",
+    ownerId: "user_11",
+    ownerName: "saito_55",
+    wantedItem: "モバイルバッテリー、イヤホン、スピーカー",
+    category: "クーポン",
+    status: "available",
+    imageUrl: "/images/demo/generated/reading-card-500.png",
+    likes: 38,
+    price: 500,
+    createdAt: "2026-06-08T10:00:00.000Z",
+  },
 ];
