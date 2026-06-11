@@ -1,27 +1,40 @@
 import type { Request, Response } from "express";
 
-import type { CreateTradeRequestInput } from "../models/tradeRequest.js";
+import type {
+  CreateTradeRequestInput,
+  TradeRequestStatus,
+} from "../models/tradeRequest.js";
 import {
-  createTradeRequest,
+  createTradeRequest as createTradeRequestRecord,
   getTradeRequestById,
-  getTradeRequests,
+  getTradeRequests as getTradeRequestRecords,
   isTradeRequestStatus,
   updateTradeRequestStatus,
 } from "../services/tradeRequestService.js";
 
 const requiredCreateFields = [
   "targetItemId",
-  "targetItemTitle",
   "offeredItemId",
-  "offeredItemTitle",
-  "requesterId",
-  "requesterName",
-  "receiverId",
-  "receiverName",
 ] as const;
 
-export function listTradeRequests(_req: Request, res: Response): void {
-  res.json({ data: getTradeRequests() });
+export function listTradeRequests(req: Request, res: Response): void {
+  const status = getQueryParam(req.query.status);
+  if (status !== undefined && !isTradeRequestStatus(status)) {
+    res.status(400).json({
+      error: "status must be one of: pending, approved, rejected, completed",
+    });
+    return;
+  }
+
+  res.json(
+    getTradeRequestRecords({
+      status,
+      requesterId: getQueryParam(req.query.requesterId),
+      receiverId: getQueryParam(req.query.receiverId),
+      targetItemId: getQueryParam(req.query.targetItemId),
+      offeredItemId: getQueryParam(req.query.offeredItemId),
+    })
+  );
 }
 
 export function getTradeRequest(req: Request, res: Response): void {
@@ -37,18 +50,18 @@ export function getTradeRequest(req: Request, res: Response): void {
     return;
   }
 
-  res.json({ data: tradeRequest });
+  res.json(tradeRequest);
 }
 
 export function postTradeRequest(req: Request, res: Response): void {
-  const validationError = validateCreateTradeRequestInput(req.body);
-  if (validationError) {
-    res.status(400).json({ error: validationError });
+  const input = toCreateTradeRequestInput(req.body);
+  if (typeof input === "string") {
+    res.status(400).json({ error: input });
     return;
   }
 
-  const tradeRequest = createTradeRequest(req.body);
-  res.status(201).json({ data: tradeRequest });
+  const tradeRequest = createTradeRequestRecord(input);
+  res.status(201).json(tradeRequest);
 }
 
 export function patchTradeRequestStatus(req: Request, res: Response): void {
@@ -58,7 +71,7 @@ export function patchTradeRequestStatus(req: Request, res: Response): void {
     return;
   }
 
-  const { status } = req.body as { status?: unknown };
+  const status = getRequestStatus(req.body);
   if (!isTradeRequestStatus(status)) {
     res.status(400).json({
       error: "status must be one of: pending, approved, rejected, completed",
@@ -72,27 +85,55 @@ export function patchTradeRequestStatus(req: Request, res: Response): void {
     return;
   }
 
-  res.json({ data: tradeRequest });
+  res.json(tradeRequest);
 }
 
-function validateCreateTradeRequestInput(
+function toCreateTradeRequestInput(
   value: unknown
-): string | undefined {
+): CreateTradeRequestInput | string {
   if (!isRecord(value)) {
     return "request body must be an object";
   }
 
+  const requiredValues: Record<(typeof requiredCreateFields)[number], string> = {
+    targetItemId: "",
+    offeredItemId: "",
+  };
+
   for (const field of requiredCreateFields) {
-    if (typeof value[field] !== "string" || value[field].trim() === "") {
+    const fieldValue = getStringField(value, field);
+    if (fieldValue === undefined) {
       return `${field} is required`;
     }
+    requiredValues[field] = fieldValue;
   }
 
-  if (value.message !== undefined && typeof value.message !== "string") {
-    return "message must be a string";
+  const optionalStringError = validateOptionalStringFields(value, [
+    "targetItemTitle",
+    "offeredItemTitle",
+    "requesterId",
+    "requesterName",
+    "receiverId",
+    "receiverName",
+    "message",
+  ]);
+  if (optionalStringError) {
+    return optionalStringError;
   }
 
-  return undefined;
+  return {
+    targetItemId: requiredValues.targetItemId,
+    targetItemTitle:
+      getStringField(value, "targetItemTitle") ?? requiredValues.targetItemId,
+    offeredItemId: requiredValues.offeredItemId,
+    offeredItemTitle:
+      getStringField(value, "offeredItemTitle") ?? requiredValues.offeredItemId,
+    requesterId: getStringField(value, "requesterId") ?? "current_user",
+    requesterName: getStringField(value, "requesterName") ?? "you",
+    receiverId: getStringField(value, "receiverId") ?? "item_owner",
+    receiverName: getStringField(value, "receiverName") ?? "owner",
+    message: getStringField(value, "message"),
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -101,4 +142,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function getRouteParam(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function getQueryParam(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== ""
+    ? value.trim()
+    : undefined;
+}
+
+function getStringField(
+  value: Record<string, unknown>,
+  field: string
+): string | undefined {
+  const fieldValue = value[field];
+  return typeof fieldValue === "string" && fieldValue.trim() !== ""
+    ? fieldValue.trim()
+    : undefined;
+}
+
+function validateOptionalStringFields(
+  value: Record<string, unknown>,
+  fields: string[]
+): string | undefined {
+  for (const field of fields) {
+    if (value[field] !== undefined && typeof value[field] !== "string") {
+      return `${field} must be a string`;
+    }
+  }
+
+  return undefined;
+}
+
+function getRequestStatus(value: unknown): TradeRequestStatus | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const status = value.status;
+  return isTradeRequestStatus(status) ? status : undefined;
 }

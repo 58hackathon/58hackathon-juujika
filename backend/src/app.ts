@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 
+import { itemRoutes } from "./routes/itemRoutes.js";
 import { tradeRequestRoutes } from "./routes/tradeRequestRoutes.js";
 
 export const app = express();
@@ -14,3 +15,5 @@ app.get("/health", (_req, res) => {
 
 app.use("/trade-requests", tradeRequestRoutes);
 app.use("/api/trade-requests", tradeRequestRoutes);
+app.use("/items", itemRoutes);
+app.use("/api/items", itemRoutes);

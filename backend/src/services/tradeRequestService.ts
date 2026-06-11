@@ -5,6 +5,14 @@ import type {
 } from "../models/tradeRequest.js";
 import { tradeRequestStatuses } from "../models/tradeRequest.js";
 
+type TradeRequestFilters = {
+  status?: TradeRequestStatus;
+  requesterId?: string;
+  receiverId?: string;
+  targetItemId?: string;
+  offeredItemId?: string;
+};
+
 const tradeRequests: TradeRequest[] = [
   {
     id: "request_1",
@@ -22,36 +30,41 @@ const tradeRequests: TradeRequest[] = [
   },
 ];
 
-export function getTradeRequests(): TradeRequest[] {
-  return [...tradeRequests];
+let nextTradeRequestNumber = tradeRequests.length + 1;
+
+export function getTradeRequests(filters: TradeRequestFilters = {}): TradeRequest[] {
+  return tradeRequests
+    .filter((tradeRequest) => matchesTradeRequestFilters(tradeRequest, filters))
+    .map(toTradeRequestResponse);
 }
 
 export function getTradeRequestById(id: string): TradeRequest | undefined {
-  return tradeRequests.find((tradeRequest) => tradeRequest.id === id);
+  const tradeRequest = findTradeRequestById(id);
+  return tradeRequest ? toTradeRequestResponse(tradeRequest) : undefined;
 }
 
 export function createTradeRequest(input: CreateTradeRequestInput): TradeRequest {
   const tradeRequest: TradeRequest = {
     ...input,
-    id: `request_${Date.now()}`,
+    id: createTradeRequestId(),
     message: input.message ?? "",
     status: "pending",
     createdAt: new Date().toISOString(),
   };
 
   tradeRequests.push(tradeRequest);
-  return tradeRequest;
+  return toTradeRequestResponse(tradeRequest);
 }
 
 export function updateTradeRequestStatus(
   id: string,
   status: TradeRequestStatus
 ): TradeRequest | undefined {
-  const tradeRequest = getTradeRequestById(id);
+  const tradeRequest = findTradeRequestById(id);
   if (!tradeRequest) return undefined;
 
   tradeRequest.status = status;
-  return tradeRequest;
+  return toTradeRequestResponse(tradeRequest);
 }
 
 export function isTradeRequestStatus(value: unknown): value is TradeRequestStatus {
@@ -59,4 +72,43 @@ export function isTradeRequestStatus(value: unknown): value is TradeRequestStatu
     typeof value === "string" &&
     tradeRequestStatuses.includes(value as TradeRequestStatus)
   );
+}
+
+function findTradeRequestById(id: string): TradeRequest | undefined {
+  return tradeRequests.find((tradeRequest) => tradeRequest.id === id);
+}
+
+function matchesTradeRequestFilters(
+  tradeRequest: TradeRequest,
+  filters: TradeRequestFilters
+): boolean {
+  return (
+    matchesOptionalFilter(tradeRequest.status, filters.status) &&
+    matchesOptionalFilter(tradeRequest.requesterId, filters.requesterId) &&
+    matchesOptionalFilter(tradeRequest.receiverId, filters.receiverId) &&
+    matchesOptionalFilter(tradeRequest.targetItemId, filters.targetItemId) &&
+    matchesOptionalFilter(tradeRequest.offeredItemId, filters.offeredItemId)
+  );
+}
+
+function matchesOptionalFilter(
+  value: string,
+  filterValue: string | undefined
+): boolean {
+  return filterValue === undefined || value === filterValue;
+}
+
+function createTradeRequestId(): string {
+  let id = `request_${nextTradeRequestNumber}`;
+  while (findTradeRequestById(id)) {
+    nextTradeRequestNumber += 1;
+    id = `request_${nextTradeRequestNumber}`;
+  }
+
+  nextTradeRequestNumber += 1;
+  return id;
+}
+
+function toTradeRequestResponse(tradeRequest: TradeRequest): TradeRequest {
+  return { ...tradeRequest };
 }
