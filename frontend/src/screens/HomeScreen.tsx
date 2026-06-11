@@ -6,11 +6,18 @@ import "./HomeScreen.css";
 
 type HomeScreenProps = {
     onSelectItem: (itemId: string) => void;
-    onOpenProfile: () => void;
+    onOpenMyPage: () => void;
+    favoriteItemIds: string[];
+    onToggleFavorite: (itemId: string) => void;
 };
 const categories = ["すべて", "ファッション", "バッグ", "家電", "クーポン"];
 
-function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
+function HomeScreen({
+    onSelectItem,
+    onOpenMyPage,
+    favoriteItemIds,
+    onToggleFavorite,
+}: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
     const [searchText, setSearchText] = useState("");
     const [items, setItems] = useState<Item[]>([]);
@@ -38,7 +45,7 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
             <button
                 aria-label="マイページ"
                 className="home-screen__profile-button"
-                onClick={onOpenProfile}
+                onClick={onOpenMyPage}
                 type="button"
             >
                 <img className="home-screen__profile-image" src="/images/demo/e10821c74b533d465ba888ea66daa30f.jpg" alt=""  />
@@ -95,7 +102,9 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
                         <ItemCard
                             key={item.id}
                             item={item}
+                            isFavorite={favoriteItemIds.includes(item.id)}
                             onSelectItem={onSelectItem}
+                            onToggleFavorite={onToggleFavorite}
                         />
                     ))}
                 </div>
