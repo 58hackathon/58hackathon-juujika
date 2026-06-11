@@ -24,6 +24,7 @@ function ItemCard({ item, onSelectItem }: ItemCardProps) {
                     <span>{item.likes}</span>
                 </div>
             </div>
+
             <div className="item-card__body">
                 <div className="item-card__meta">
                     <span className={`item-card__status item-card__status--${item.status}`}>
@@ -43,10 +44,6 @@ function ItemCard({ item, onSelectItem }: ItemCardProps) {
                     <div className="item-card__price">
                         ¥{item.price.toLocaleString()}
                     </div>
-
-                    <button className="item-card__favorite" aria-label={`${item.title}をお気に入りに追加`} type="button">
-                        ☆
-                    </button>
                     <button
                         className="item-card__detail-button"
                         onClick={() => onSelectItem(item.id)}

@@ -155,6 +155,14 @@
     display: none;
 }
 
+.home-screen__profile-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.5);
+}
+
 @media (min-width: 760px) {
     .home-screen {
         padding-top: 40px;
@@ -190,16 +198,17 @@
         top: 14px;
         right: 14px;
         z-index: 20;
-        display: grid;
-        place-items: center;
+        display: block;
         width: 40px;
         height: 40px;
         border: 0;
         border-radius: 999px;
-        background: var(--color-text);
+        background: transparent;
+        overflow: hidden;
         color: #ffffff;
         font-weight: 800;
         box-shadow: 0 10px 24px rgba(31, 41, 55, 0.18);
+        cursor: pointer;
     }
     .home-screen__header {
         padding-right: 52px;

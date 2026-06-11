@@ -5,6 +5,7 @@ import HomeScreen from "./screens/HomeScreen";
 import ItemDetailScreen from "./screens/ItemDetailScreen";
 import AppNav from "./components/AppNav";
 import "./App.css";
+import CreateItemScreen from "./screens/CreateItemScreen";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
@@ -44,12 +45,7 @@ function App() {
         />
       )}
 
-      {currentScreen === "createItem" && (
-        <section className="placeholder-screen">
-          <h1>出品画面</h1>
-          <p>ここに出品フォームを作ります。</p>
-        </section>
-      )}
+      {currentScreen === "createItem" && <CreateItemScreen />}
 
       {currentScreen === "requestList" && (
         <section className="placeholder-screen">
