@@ -7,14 +7,27 @@ import ItemDetailScreen from "./screens/ItemDetailScreen";
 import AppNav from "./components/AppNav";
 import "./App.css";
 import CreateItemScreen from "./screens/CreateItemScreen";
+import MyPageScreen from "./screens/MyPageScreen";
+import AiProposalScreen from "./screens/AiProposalScreen";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [favoriteItemIds, setFavoriteItemIds] = useState<string[]>([]);
 
   const handleNavigate = (screen: Screen) => {
     setCurrentScreen(screen);
     setSelectedItem(null);
+  };
+
+  const handleToggleFavorite = (itemId: string) => {
+    setFavoriteItemIds((currentIds) => {
+      if (currentIds.includes(itemId)) {
+        return currentIds.filter((currentId) => currentId !== itemId);
+      }
+
+      return [...currentIds, itemId];
+    });
   };
 
   return (
@@ -36,7 +49,9 @@ function App() {
             setSelectedItem(item);
             setCurrentScreen("itemDetail");
           }}
-          onOpenProfile={() => setCurrentScreen("profile")}
+          onOpenMyPage={() => setCurrentScreen("myPage")}
+          favoriteItemIds={favoriteItemIds}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
 
@@ -61,19 +76,15 @@ function App() {
         </section>
       )}
 
-      {currentScreen === "profile" && (
-        <section className="placeholder-screen placeholder-screen--profile">
-          <button
-            className="placeholder-screen__back-button"
-            onClick={() => setCurrentScreen("home")}
-            type="button"
-          >
-            ←
-          </button>
+      {currentScreen === "myPage" && (
+        <MyPageScreen
+          favoriteItemIds={favoriteItemIds}
+          onBack={() => setCurrentScreen("home")}
+        />
+      )}
 
-          <h1>プロフィール</h1>
-          <p>ユーザー情報を表示する画面です。</p>
-        </section>
+      {currentScreen === "aiProposal" && (
+        <AiProposalScreen />
       )}
 
     </main>

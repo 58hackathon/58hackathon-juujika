@@ -10,7 +10,7 @@ const navItems: { screen: Screen; label: string }[] = [
     { screen: "home", label: "商品一覧" },
     { screen: "createItem", label: "出品" },
     { screen: "requestList", label: "リクエスト" },
-    { screen: "favorite", label: "お気に入り"},
+    { screen: "aiProposal", label: "AI提案"},
 ];
 
 function AppNav({ currentScreen, onNavigate }: AppNavProps) {
@@ -31,13 +31,13 @@ function AppNav({ currentScreen, onNavigate }: AppNavProps) {
                 </button>
             ))}
             <button
-                aria-label="プロフィール"
+                aria-label="マイページ"
                 className={
-                    currentScreen === "profile"
+                    currentScreen === "myPage"
                         ? "app-nav__profile app-nav__profile--active"
                         : "app-nav__profile"
                 }
-                onClick={() => onNavigate("profile")}
+                onClick={() => onNavigate("myPage")}
                 type="button"
             >
                 <img className="app-nav__profile-image" src="/images/demo/e10821c74b533d465ba888ea66daa30f.jpg" alt="profile-image" />

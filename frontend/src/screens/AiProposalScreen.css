@@ -1,0 +1,151 @@
+.ai-proposal-screen {
+    width: min(100%, 760px);
+    margin: 0 auto;
+    padding: 32px 16px 104px;
+}
+
+.ai-proposal-screen__header {
+    margin-bottom: 22px;
+}
+
+.ai-proposal-screen__eyebrow {
+    display: inline-grid;
+    place-items: center;
+    min-height: 28px;
+    margin: 0 0 10px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #e7fbef;
+    color: #118b4f;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.ai-proposal-screen h1 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 28px;
+    line-height: 1.25;
+}
+
+.ai-proposal-screen__header p:not(.ai-proposal-screen__eyebrow) {
+    margin: 8px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.7;
+}
+
+.ai-proposal-board {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.ai-proposal-card {
+    min-height: 148px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.86);
+}
+
+.ai-proposal-card span {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 18px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-weight: 900;
+}
+
+.ai-proposal-card--goal span {
+    background: #18b86f;
+}
+
+.ai-proposal-card h2 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 17px;
+}
+
+.ai-proposal-card p {
+    margin: 6px 0 0;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.ai-proposal-arrow {
+    color: var(--color-primary);
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.ai-proposal-preview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 20px;
+    background: #0f172a;
+    color: #ffffff;
+}
+
+.ai-proposal-preview__label {
+    margin: 0 0 6px !important;
+    color: #9ff3cc !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+}
+
+.ai-proposal-preview h2 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.ai-proposal-preview p {
+    margin: 6px 0 0;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.6;
+}
+
+.ai-proposal-preview button {
+    flex: 0 0 auto;
+    min-width: 96px;
+    height: 42px;
+    border: 0;
+    border-radius: 14px;
+    background: #e7fbef;
+    color: #118b4f;
+    font-weight: 900;
+}
+
+@media (min-width: 721px) {
+    .ai-proposal-screen {
+        padding-top: 104px;
+    }
+}
+
+@media (max-width: 520px) {
+    .ai-proposal-board {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-proposal-arrow {
+        transform: rotate(90deg);
+        justify-self: center;
+    }
+
+    .ai-proposal-preview {
+        display: grid;
+    }
+}

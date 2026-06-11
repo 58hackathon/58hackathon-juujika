@@ -5,6 +5,5 @@ export type Screen =
   | "requestList"
   | "requestDetail"
   | "createItem"
-  | "profile"
-  | "favorite";
-
+  | "myPage"
+  | "aiProposal";

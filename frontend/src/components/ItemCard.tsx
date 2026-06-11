@@ -4,25 +4,67 @@ import "./ItemCard.css";
 type ItemCardProps = {
     item: Item;
     onSelectItem: (itemId: string) => void;
+    isFavorite: boolean;
+    onToggleFavorite: (itemId: string) => void;
 };
 
-function ItemCard({ item, onSelectItem }: ItemCardProps) {
+function ItemCard({
+    item,
+    onSelectItem,
+    isFavorite,
+    onToggleFavorite,
+}: ItemCardProps) {
     const statusLabel = {
         available: "募集中",
         trading: "交渉中",
         completed: "成立",
     }[item.status];
 
+    const handleCardKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (event.target !== event.currentTarget) return;
+
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelectItem(item.id);
+        }
+    };
+
+    const handleFavoriteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        onToggleFavorite(item.id);
+    };
+    const favoriteCount = item.likes + (isFavorite ? 1 : 0);
+
     return (
-        <article className="item-card">
+        <article
+            className="item-card"
+            onClick={() => onSelectItem(item.id)}
+            onKeyDown={handleCardKeyDown}
+            role="button"
+            tabIndex={0}
+        >
 
             <div className="item-card__image-area">
                 <img className="item-card__image" src={item.imageUrl} alt={item.title} />
 
-                <div className="item-card__likes">
-                    <span aria-hidden="true">♡</span>
-                    <span>{item.likes}</span>
-                </div>
+                <button
+                    aria-label={
+                        isFavorite
+                            ? `${item.title}をお気に入りから外す`
+                            : `${item.title}をお気に入りに追加`
+                    }
+                    aria-pressed={isFavorite}
+                    className={
+                        isFavorite
+                            ? "item-card__likes item-card__likes--active"
+                            : "item-card__likes"
+                    }
+                    onClick={handleFavoriteClick}
+                    type="button"
+                >
+                    <span aria-hidden="true">{isFavorite ? "♥" : "♡"}</span>
+                    <span>{favoriteCount}</span>
+                </button>
             </div>
 
             <div className="item-card__body">
@@ -44,13 +86,6 @@ function ItemCard({ item, onSelectItem }: ItemCardProps) {
                     <div className="item-card__price">
                         ¥{item.price.toLocaleString()}
                     </div>
-                    <button
-                        className="item-card__detail-button"
-                        onClick={() => onSelectItem(item.id)}
-                        type="button"
-                    >
-                    詳細
-                    </button>
                 </div>
             </div>
         </article>
