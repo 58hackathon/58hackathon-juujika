@@ -1,17 +1,4 @@
-interface Item {
-  id: string;
-  title: string;
-  description: string;
-  ownerId: string;
-  ownerName: string;
-  wantedItem: string;
-  category: string;
-  status: string;
-  imageUrl: string;
-  likes: number;
-  price: number;
-  createdAt: string;
-}
+import type { Item } from "./itemTypes";
 
 export const demoItems: Item[] = [
   {

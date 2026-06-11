@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Screen } from "./routes/screenTypes";
-import { demoItems } from "./features/items/itemData";
+import { getItemById } from "./features/items/itemApi";
+import type { Item } from "./features/items/itemTypes";
 import HomeScreen from "./screens/HomeScreen";
 import ItemDetailScreen from "./screens/ItemDetailScreen";
 import AppNav from "./components/AppNav";
@@ -9,13 +10,11 @@ import CreateItemScreen from "./screens/CreateItemScreen";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-
-  const selectedItem = demoItems.find((item) => item.id === selectedItemId);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   const handleNavigate = (screen: Screen) => {
     setCurrentScreen(screen);
-    setSelectedItemId(null);
+    setSelectedItem(null);
   };
 
   return (
@@ -30,8 +29,11 @@ function App() {
 
       {currentScreen === "home" && (
         <HomeScreen
-          onSelectItem={(itemId) => {
-            setSelectedItemId(itemId);
+          onSelectItem={async (itemId) => {
+            const item = await getItemById(itemId);
+            if (!item) return;
+
+            setSelectedItem(item);
             setCurrentScreen("itemDetail");
           }}
           onOpenProfile={() => setCurrentScreen("profile")}
@@ -41,11 +43,16 @@ function App() {
       {currentScreen === "itemDetail" && selectedItem && (
         <ItemDetailScreen
           item={selectedItem}
-          onBack={() => setCurrentScreen("home")}
+          onBack={() => {
+            setSelectedItem(null);
+            setCurrentScreen("home");
+          }}
         />
       )}
 
-      {currentScreen === "createItem" && <CreateItemScreen />}
+      {currentScreen === "createItem" && (
+        <CreateItemScreen onItemCreated={() => setCurrentScreen("home")} />
+      )}
 
       {currentScreen === "requestList" && (
         <section className="placeholder-screen">

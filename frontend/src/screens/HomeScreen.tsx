@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ItemCard from "../components/ItemCard";
-import { demoItems } from "../features/items/itemData";
+import { getItems } from "../features/items/itemApi";
+import type { Item } from "../features/items/itemTypes";
 import "./HomeScreen.css";
 
 type HomeScreenProps = {
@@ -12,7 +13,17 @@ const categories = ["すべて", "ファッション", "バッグ", "家電", "�
 function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
     const [searchText, setSearchText] = useState("");
-    const filteredItems = demoItems.filter((item) => {
+    const [items, setItems] = useState<Item[]>([]);
+
+    useEffect(() => {
+    const loadItems = async () => {
+        const itemsFromApi = await getItems();
+        setItems(itemsFromApi);
+    };
+
+    loadItems();
+    }, []);
+    const filteredItems = items.filter((item) => {
     const matchesCategory = 
         activeCategory === "すべて" || item.category === activeCategory;
     const matchesSearch =
@@ -25,7 +36,7 @@ function HomeScreen({ onSelectItem, onOpenProfile }: HomeScreenProps) {
     return (
         <section className="home-screen">
             <button
-                aria-label="プロフィール"
+                aria-label="マイページ"
                 className="home-screen__profile-button"
                 onClick={onOpenProfile}
                 type="button"
