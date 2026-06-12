@@ -1,0 +1,329 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 456" role="img" aria-labelledby="title desc">
+  <title id="title">交換が成立しました！</title>
+  <desc id="desc">青と黄緑のわたあめみたいなキャラクターが中央に横並びで交換成立をお祝いしているバナー</desc>
+  <style>
+    .card {
+      animation: card-in 560ms cubic-bezier(.2, 1.25, .35, 1) both;
+      transform-origin: 50% 50%;
+    }
+
+    .float {
+      animation: yay-bounce 1700ms ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: 50% 88%;
+    }
+
+    .green-float {
+      animation-delay: 260ms;
+    }
+
+    .blink {
+      animation: blink 4600ms ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .pupil {
+      animation: look 2800ms ease-in-out infinite;
+    }
+
+    .cracker {
+      animation: cracker-pop 2200ms ease-out infinite;
+      transform-box: fill-box;
+      transform-origin: bottom center;
+    }
+
+    .burst-line {
+      animation: burst-line 2200ms ease-out infinite;
+      stroke-dasharray: 72;
+      stroke-dashoffset: 72;
+    }
+
+    .burst-piece {
+      animation: burst-piece 2200ms ease-out infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .fold {
+      stroke: rgba(255, 255, 255, .58);
+      stroke-width: 2;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .burst-right {
+      animation-delay: 150ms;
+    }
+
+    .bg-confetti {
+      animation: bg-confetti-fall 5200ms ease-in-out infinite;
+      opacity: .55;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .b1 { --dx: -118px; --dy: -104px; --rot: -44deg; }
+    .b2 { --dx: -54px; --dy: -156px; --rot: 30deg; }
+    .b3 { --dx: 48px; --dy: -150px; --rot: 62deg; }
+    .b4 { --dx: 138px; --dy: -90px; --rot: 104deg; }
+    .b5 { --dx: 10px; --dy: -184px; --rot: -68deg; }
+    .b6 { --dx: -150px; --dy: -48px; --rot: -102deg; }
+    .b7 { --dx: 158px; --dy: -34px; --rot: 130deg; }
+    .b8 { --dx: 92px; --dy: -172px; --rot: -24deg; }
+    .b9 { --dx: -92px; --dy: -148px; --rot: 76deg; }
+    .b10 { --dx: 132px; --dy: -142px; --rot: -86deg; }
+    .c1 { --fall-x: 16px; --fall-y: 42px; --spin: 42deg; }
+    .c2 { --fall-x: -18px; --fall-y: 48px; --spin: -58deg; animation-delay: 420ms; }
+    .c3 { --fall-x: 12px; --fall-y: 58px; --spin: 86deg; animation-delay: 820ms; }
+    .c4 { --fall-x: -14px; --fall-y: 46px; --spin: -38deg; animation-delay: 1240ms; }
+    .c5 { --fall-x: 20px; --fall-y: 54px; --spin: 72deg; animation-delay: 1640ms; }
+    .c6 { --fall-x: -10px; --fall-y: 62px; --spin: -92deg; animation-delay: 2040ms; }
+    .c7 { --fall-x: 14px; --fall-y: 45px; --spin: 56deg; animation-delay: 2440ms; }
+    .c8 { --fall-x: -22px; --fall-y: 52px; --spin: -72deg; animation-delay: 2840ms; }
+    .c9 { --fall-x: 18px; --fall-y: 56px; --spin: 108deg; animation-delay: 320ms; }
+    .c10 { --fall-x: -16px; --fall-y: 64px; --spin: -116deg; animation-delay: 680ms; }
+    .c11 { --fall-x: 22px; --fall-y: 50px; --spin: 84deg; animation-delay: 1040ms; }
+    .c12 { --fall-x: -20px; --fall-y: 58px; --spin: -48deg; animation-delay: 1460ms; }
+    .c13 { --fall-x: 12px; --fall-y: 70px; --spin: 132deg; animation-delay: 1880ms; }
+    .c14 { --fall-x: -26px; --fall-y: 54px; --spin: -88deg; animation-delay: 2260ms; }
+    .c15 { --fall-x: 20px; --fall-y: 60px; --spin: 62deg; animation-delay: 2660ms; }
+    .c16 { --fall-x: -12px; --fall-y: 68px; --spin: -138deg; animation-delay: 3060ms; }
+    .c17 { --fall-x: 24px; --fall-y: 48px; --spin: 96deg; animation-delay: 3480ms; }
+    .c18 { --fall-x: -18px; --fall-y: 62px; --spin: -66deg; animation-delay: 3900ms; }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(12px) scale(.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes yay-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      22% { transform: translateY(-18px) scale(1.035, .96); }
+      38% { transform: translateY(3px) scale(.98, 1.035); }
+      56% { transform: translateY(-10px) scale(1.02, .985); }
+      72% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes blink {
+      0%, 88%, 94%, 100% { transform: scaleY(1); }
+      91% { transform: scaleY(.12); }
+    }
+
+    @keyframes look {
+      0%, 100% { transform: translateX(0); }
+      42% { transform: translateX(2px); }
+      72% { transform: translateX(-1.5px); }
+    }
+
+    @keyframes cracker-pop {
+      0%, 78%, 100% { transform: rotate(0deg) scale(1); }
+      8% { transform: rotate(-8deg) scale(1.08); }
+      16% { transform: rotate(6deg) scale(.98); }
+      28% { transform: rotate(0deg) scale(1); }
+    }
+
+    @keyframes burst-line {
+      0%, 8% {
+        opacity: 0;
+        stroke-dashoffset: 72;
+      }
+      16%, 36% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+      }
+      58%, 100% {
+        opacity: 0;
+        stroke-dashoffset: -72;
+      }
+    }
+
+    @keyframes burst-piece {
+      0%, 8% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg) scale(.25);
+      }
+      16% {
+        opacity: 1;
+        transform: translate(calc(var(--dx) * .62), calc(var(--dy) * .62)) rotate(var(--rot)) scale(1.18);
+      }
+      52% {
+        opacity: 1;
+        transform: translate(calc(var(--dx) * 1.02), calc(var(--dy) * .94 + 24px)) rotate(calc(var(--rot) + 96deg)) scale(1);
+      }
+      78%, 100% {
+        opacity: 0;
+        transform: translate(calc(var(--dx) * 1.28), calc(var(--dy) * .86 + 84px)) rotate(calc(var(--rot) + 188deg)) scale(.72);
+      }
+    }
+
+    @keyframes bg-confetti-fall {
+      0% {
+        opacity: 0;
+        transform: translate(0, -16px) rotate(0deg);
+      }
+      14%, 68% {
+        opacity: .58;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--fall-x), var(--fall-y)) rotate(var(--spin));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card,
+      .float,
+      .blink,
+      .pupil,
+      .cracker,
+      .burst-line,
+      .burst-piece,
+      .bg-confetti,
+      .hand-party {
+        animation: none;
+      }
+    }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="20" y1="24" x2="700" y2="432" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0BA"/>
+      <stop offset=".52" stop-color="#FFFFD6"/>
+      <stop offset="1" stop-color="#E6FFB5"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#B7FF16" flood-opacity=".24"/>
+    </filter>
+  </defs>
+
+  <g class="card">
+    <rect x="16" y="16" width="688" height="424" rx="34" fill="url(#bg)" filter="url(#soft-shadow)"/>
+
+    <g aria-hidden="true">
+      <g class="bg-confetti c1"><path d="M96 188 109 191 105 218 92 215z" fill="#FF7A59"/><path class="fold" d="M101 191 98 215"/></g>
+      <g class="bg-confetti c2"><path d="M156 128c9-7 20-3 22 7-9 8-20 5-22-7z" fill="#20C997"/><path class="fold" d="M160 130c5 5 10 7 16 6"/></g>
+      <g class="bg-confetti c3"><path d="M238 194 252 199 247 222 233 217z" fill="#8B5CF6"/><path class="fold" d="M244 198 240 218"/></g>
+      <g class="bg-confetti c4"><path d="M514 151 532 176 499 173z" fill="#FFB000"/><path class="fold" d="M514 154 516 172"/></g>
+      <g class="bg-confetti c5"><path d="M596 204 611 208 604 235 590 230z" fill="#0757FF"/><path class="fold" d="M602 207 597 232"/></g>
+      <g class="bg-confetti c6"><path d="M540 294c9-8 20-4 23 7-9 8-20 5-23-7z" fill="#FF4D73"/><path class="fold" d="M545 296c5 5 10 7 16 6"/></g>
+      <g class="bg-confetti c7"><path d="M172 318 190 344 158 338z" fill="#13C479"/><path class="fold" d="M173 321 175 338"/></g>
+      <g class="bg-confetti c8"><path d="M422 324 436 330 430 352 417 346z" fill="#FFB000"/><path class="fold" d="M428 328 423 347"/></g>
+      <g class="bg-confetti c9"><path d="M64 78 76 82 72 105 60 101z" fill="#8B5CF6"/><path class="fold" d="M69 81 66 102"/></g>
+      <g class="bg-confetti c10"><path d="M246 116 263 140 232 136z" fill="#FF7A59"/><path class="fold" d="M247 119 249 136"/></g>
+      <g class="bg-confetti c11"><path d="M330 180c8-7 18-4 21 6-8 7-18 5-21-6z" fill="#20C997"/><path class="fold" d="M334 182c5 4 9 5 15 5"/></g>
+      <g class="bg-confetti c12"><path d="M462 88 476 92 470 119 456 114z" fill="#0757FF"/><path class="fold" d="M468 91 463 116"/></g>
+      <g class="bg-confetti c13"><path d="M634 92c9-8 20-4 23 7-9 8-20 5-23-7z" fill="#FF4D73"/><path class="fold" d="M639 94c5 5 10 7 16 6"/></g>
+      <g class="bg-confetti c14"><path d="M628 356 642 362 635 387 622 380z" fill="#13C479"/><path class="fold" d="M634 360 628 382"/></g>
+      <g class="bg-confetti c15"><path d="M82 372 99 397 68 391z" fill="#FFB000"/><path class="fold" d="M83 375 85 391"/></g>
+      <g class="bg-confetti c16"><path d="M278 348c8-7 18-4 21 6-8 7-18 5-21-6z" fill="#8B5CF6"/><path class="fold" d="M282 350c5 4 9 5 15 5"/></g>
+      <g class="bg-confetti c17"><path d="M510 376 522 380 518 403 506 399z" fill="#FF7A59"/><path class="fold" d="M515 379 512 400"/></g>
+      <g class="bg-confetti c18"><path d="M355 244 372 269 341 263z" fill="#56A8FF"/><path class="fold" d="M356 247 358 263"/></g>
+    </g>
+
+    <text x="360" y="100" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="39" font-weight="900" fill="#111111">交換が成立しました！</text>
+    <text x="360" y="158" text-anchor="middle" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="900" fill="#111111">おめでとうございます！</text>
+
+    <g transform="translate(156 232) scale(.86)">
+      <g class="float">
+        <ellipse cx="96" cy="174" rx="78" ry="16" fill="#4086ED" opacity=".13"/>
+        <circle cx="39" cy="76" r="40" fill="#55A8FF"/>
+        <circle cx="81" cy="43" r="46" fill="#55A8FF"/>
+        <circle cx="124" cy="44" r="43" fill="#55A8FF"/>
+        <circle cx="158" cy="80" r="42" fill="#55A8FF"/>
+        <circle cx="53" cy="121" r="50" fill="#55A8FF"/>
+        <circle cx="103" cy="124" r="57" fill="#55A8FF"/>
+        <circle cx="153" cy="121" r="48" fill="#55A8FF"/>
+        <g class="hand-party">
+          <path d="M30 111c-31-18-48-14-54 4-6 19 13 31 47 21" fill="#55A8FF"/>
+          <g transform="translate(-51 72) rotate(-30)">
+            <g class="cracker">
+              <path d="M0 39 47 18 33 72z" fill="#FFB000"/>
+              <path d="M9 35 47 18 39 49z" fill="#8B5CF6"/>
+              <path d="M16 52 39 49 33 72z" fill="#0757FF"/>
+            </g>
+            <path class="burst-line" d="M32 42c-82-22-128-67-150-128" fill="none" stroke="#FF4D73" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line" d="M32 42c-24-86 6-140 66-178" fill="none" stroke="#13C479" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line" d="M32 42c72-72 132-84 192-54" fill="none" stroke="#0757FF" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line" d="M32 42c-108 20-158 2-196-42" fill="none" stroke="#FFB000" stroke-width="7" stroke-linecap="round"/>
+            <path class="burst-line" d="M32 42c98 16 148 48 182 99" fill="none" stroke="#8B5CF6" stroke-width="7" stroke-linecap="round"/>
+            <g class="burst-piece b1"><path d="M25 28 43 34 36 66 18 59z" fill="#FF7A59"/><path class="fold" d="M33 32 28 61"/></g>
+            <g class="burst-piece b2"><path d="M21 35c12-12 28-7 33 7-12 12-28 8-33-7z" fill="#20C997"/><path class="fold" d="M27 37c7 7 15 10 25 8"/></g>
+            <g class="burst-piece b3"><path d="M26 28 44 36 38 70 19 62z" fill="#8B5CF6"/><path class="fold" d="M34 33 28 64"/></g>
+            <g class="burst-piece b4"><path d="M32 38 54 72 12 64z" fill="#FF4D73"/><path class="fold" d="M32 42 34 64"/></g>
+            <g class="burst-piece b5"><path d="M22 35c12-11 27-6 32 7-11 11-27 8-32-7z" fill="#FFB000"/><path class="fold" d="M28 37c7 6 14 8 24 7"/></g>
+            <g class="burst-piece b6"><path d="M26 30 42 36 37 65 20 60z" fill="#0757FF"/><path class="fold" d="M33 34 28 62"/></g>
+            <g class="burst-piece b7"><path d="M32 38 52 67 14 65z" fill="#13C479"/><path class="fold" d="M32 42 33 63"/></g>
+            <g class="burst-piece b8"><path d="M27 27 43 34 38 66 21 60z" fill="#FFB000"/><path class="fold" d="M34 31 29 62"/></g>
+            <g class="burst-piece b9"><path d="M23 35c11-10 25-6 29 6-10 10-25 7-29-6z" fill="#FF4D73"/><path class="fold" d="M28 37c6 5 13 7 22 6"/></g>
+            <g class="burst-piece b10"><path d="M32 38 51 63 17 69z" fill="#20C997"/><path class="fold" d="M32 42 34 64"/></g>
+          </g>
+        </g>
+        <path class="arm-right" d="M168 111c31-18 48-14 54 4 6 19-13 31-47 21" fill="#55A8FF"/>
+        <ellipse cx="62" cy="171" rx="22" ry="17" fill="#55A8FF"/>
+        <ellipse cx="138" cy="171" rx="22" ry="17" fill="#55A8FF"/>
+        <circle class="blink" cx="80" cy="88" r="9" fill="#111111"/>
+        <circle class="blink" cx="121" cy="88" r="9" fill="#111111"/>
+        <circle cx="83" cy="84" r="3" fill="#FFFFFF"/>
+        <circle cx="124" cy="84" r="3" fill="#FFFFFF"/>
+        <path d="M78 119c12 14 32 14 44 0" fill="none" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="56" cy="116" r="10" fill="#FFE0A3"/>
+        <circle cx="144" cy="116" r="10" fill="#FFE0A3"/>
+        <circle cx="47" cy="48" r="8" fill="#367EEB"/>
+        <circle cx="150" cy="50" r="8" fill="#367EEB"/>
+      </g>
+    </g>
+
+    <g transform="translate(382 232) scale(.86)">
+      <g class="float green-float">
+        <ellipse cx="108" cy="178" rx="82" ry="17" fill="#77BD00" opacity=".14"/>
+        <circle cx="43" cy="80" r="43" fill="#B5FF08"/>
+        <circle cx="85" cy="44" r="48" fill="#B5FF08"/>
+        <circle cx="132" cy="43" r="48" fill="#B5FF08"/>
+        <circle cx="173" cy="82" r="43" fill="#B5FF08"/>
+        <circle cx="59" cy="126" r="52" fill="#B5FF08"/>
+        <circle cx="111" cy="128" r="62" fill="#B5FF08"/>
+        <circle cx="164" cy="126" r="52" fill="#B5FF08"/>
+        <path class="arm-left" d="M30 118c-34-18-53-12-58 8-5 20 16 31 52 18" fill="#B5FF08"/>
+        <g class="arm-right">
+          <path d="M184 118c34-18 53-12 58 8 5 20-16 31-52 18" fill="#B5FF08"/>
+          <g transform="translate(272 78) scale(-1 1) rotate(-30)">
+            <g class="cracker burst-right">
+              <path d="M0 39 47 18 33 72z" fill="#FFB000"/>
+              <path d="M9 35 47 18 39 49z" fill="#20C997"/>
+              <path d="M16 52 39 49 33 72z" fill="#FF7A59"/>
+            </g>
+            <path class="burst-line burst-right" d="M32 42c-82-22-128-67-150-128" fill="none" stroke="#FF7A59" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line burst-right" d="M32 42c-24-86 6-140 66-178" fill="none" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line burst-right" d="M32 42c72-72 132-84 192-54" fill="none" stroke="#13C479" stroke-width="8" stroke-linecap="round"/>
+            <path class="burst-line burst-right" d="M32 42c-108 20-158 2-196-42" fill="none" stroke="#0757FF" stroke-width="7" stroke-linecap="round"/>
+            <path class="burst-line burst-right" d="M32 42c98 16 148 48 182 99" fill="none" stroke="#FFB000" stroke-width="7" stroke-linecap="round"/>
+            <g class="burst-piece burst-right b1"><path d="M25 28 43 34 36 66 18 59z" fill="#0757FF"/><path class="fold" d="M33 32 28 61"/></g>
+            <g class="burst-piece burst-right b2"><path d="M21 35c12-12 28-7 33 7-12 12-28 8-33-7z" fill="#FF4D73"/><path class="fold" d="M27 37c7 7 15 10 25 8"/></g>
+            <g class="burst-piece burst-right b3"><path d="M26 28 44 36 38 70 19 62z" fill="#FFB000"/><path class="fold" d="M34 33 28 64"/></g>
+            <g class="burst-piece burst-right b4"><path d="M32 38 54 72 12 64z" fill="#20C997"/><path class="fold" d="M32 42 34 64"/></g>
+            <g class="burst-piece burst-right b5"><path d="M22 35c12-11 27-6 32 7-11 11-27 8-32-7z" fill="#8B5CF6"/><path class="fold" d="M28 37c7 6 14 8 24 7"/></g>
+            <g class="burst-piece burst-right b6"><path d="M26 30 42 36 37 65 20 60z" fill="#20C997"/><path class="fold" d="M33 34 28 62"/></g>
+            <g class="burst-piece burst-right b7"><path d="M32 38 52 67 14 65z" fill="#FF7A59"/><path class="fold" d="M32 42 33 63"/></g>
+            <g class="burst-piece burst-right b8"><path d="M27 27 43 34 38 66 21 60z" fill="#8B5CF6"/><path class="fold" d="M34 31 29 62"/></g>
+            <g class="burst-piece burst-right b9"><path d="M23 35c11-10 25-6 29 6-10 10-25 7-29-6z" fill="#FFB000"/><path class="fold" d="M28 37c6 5 13 7 22 6"/></g>
+            <g class="burst-piece burst-right b10"><path d="M32 38 51 63 17 69z" fill="#0757FF"/><path class="fold" d="M32 42 34 64"/></g>
+          </g>
+        </g>
+        <ellipse cx="68" cy="176" rx="24" ry="18" fill="#B5FF08"/>
+        <ellipse cx="150" cy="176" rx="24" ry="18" fill="#B5FF08"/>
+        <ellipse cx="85" cy="88" rx="22" ry="29" fill="#FFFFFF"/>
+        <ellipse cx="132" cy="88" rx="22" ry="29" fill="#FFFFFF"/>
+        <circle class="pupil" cx="88" cy="92" r="9" fill="#111111"/>
+        <circle class="pupil" cx="135" cy="92" r="9" fill="#111111"/>
+        <circle cx="92" cy="86" r="3" fill="#FFFFFF"/>
+        <circle cx="139" cy="86" r="3" fill="#FFFFFF"/>
+        <path d="M90 130c13 13 36 13 49 0" fill="none" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="60" cy="123" r="11" fill="#FFA8C0"/>
+        <circle cx="158" cy="123" r="11" fill="#FFA8C0"/>
+        <circle cx="51" cy="48" r="8" fill="#8FE600"/>
+        <circle cx="166" cy="48" r="8" fill="#8FE600"/>
+      </g>
+    </g>
+  </g>
+</svg>

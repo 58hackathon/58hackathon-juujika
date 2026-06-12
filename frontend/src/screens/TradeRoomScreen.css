@@ -1,0 +1,285 @@
+.trade-room-screen {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    padding: 18px 14px 96px;
+}
+
+.trade-room-screen__phone {
+    min-height: calc(100vh - 36px);
+    padding: 18px 16px 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 30px;
+    background: #ffffff;
+    box-shadow: 0 18px 44px rgba(31, 41, 55, 0.12);
+}
+
+.trade-room-screen__top {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.trade-room-screen__top h1 {
+    margin: 0;
+    font-size: 19px;
+    text-align: center;
+}
+
+.trade-room-screen__close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.trade-room-screen__section {
+    margin-bottom: 16px;
+}
+
+.trade-room-screen__section h2 {
+    margin: 0 0 8px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.trade-room-screen__product {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    min-height: 104px;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(31, 41, 55, 0.05);
+    animation: trade-room-card-in 420ms ease both;
+}
+
+.trade-room-screen__product img {
+    width: 86px;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    background: #f3f4f6;
+    object-fit: cover;
+}
+
+.trade-room-screen__product strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.trade-room-screen__product span {
+    display: block;
+    margin-top: 6px;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.trade-room-screen__message-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: end;
+}
+
+.trade-room-screen__bubble {
+    min-height: 78px;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    background: #ffffff;
+    color: var(--color-muted);
+    animation: trade-room-bubble-in 480ms ease 100ms both;
+}
+
+.trade-room-screen__bubble p {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: 800;
+    line-height: 1.7;
+}
+
+.trade-room-screen__message-row time {
+    color: var(--color-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.trade-room-screen__celebration {
+    position: relative;
+    margin: 18px 0 20px;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 16px 34px rgba(183, 255, 22, 0.22);
+    animation: trade-room-celebration-pop 620ms cubic-bezier(0.2, 1.25, 0.4, 1) both;
+}
+
+.trade-room-screen__celebration img {
+    display: block;
+    width: 100%;
+    border-radius: 14px;
+    animation: trade-room-success-float 2200ms ease-in-out 620ms infinite;
+}
+
+.trade-room-screen__celebration::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        115deg,
+        transparent 0%,
+        transparent 38%,
+        rgba(255, 255, 255, 0.5) 48%,
+        transparent 58%,
+        transparent 100%
+    );
+    opacity: 0;
+    transform: translateX(-120%);
+    animation: trade-room-success-shine 2800ms ease-in-out 900ms infinite;
+    pointer-events: none;
+}
+
+.trade-room-screen__primary,
+.trade-room-screen__secondary {
+    width: 100%;
+    min-height: 54px;
+    border: 0;
+    border-radius: 999px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.trade-room-screen__primary {
+    margin-bottom: 12px;
+    background: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 14px 24px rgba(7, 87, 255, 0.24);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.trade-room-screen__primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 30px rgba(7, 87, 255, 0.3);
+}
+
+.trade-room-screen__secondary {
+    background: #f3f4f6;
+    color: var(--color-text);
+}
+
+@keyframes trade-room-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes trade-room-bubble-in {
+    from {
+        opacity: 0;
+        transform: translateX(-10px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes trade-room-celebration-pop {
+    0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.94);
+    }
+
+    70% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes trade-room-success-float {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+
+    50% {
+        transform: translateY(-4px) scale(1.01);
+    }
+}
+
+@keyframes trade-room-success-shine {
+    0%,
+    48% {
+        opacity: 0;
+        transform: translateX(-120%);
+    }
+
+    58% {
+        opacity: 1;
+    }
+
+    78%,
+    100% {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trade-room-screen__product,
+    .trade-room-screen__bubble,
+    .trade-room-screen__celebration,
+    .trade-room-screen__celebration img,
+    .trade-room-screen__celebration::after {
+        animation: none;
+    }
+
+    .trade-room-screen__primary {
+        transition: none;
+    }
+}
+
+@media (max-width: 720px) {
+    .trade-room-screen {
+        padding: 0;
+        width: 100%;
+    }
+
+    .trade-room-screen__phone {
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .trade-room-screen__product {
+        grid-template-columns: 78px minmax(0, 1fr);
+    }
+
+    .trade-room-screen__product img {
+        width: 78px;
+    }
+}
