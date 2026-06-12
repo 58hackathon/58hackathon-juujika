@@ -37,3 +37,16 @@
     font-size: 24px;
     font-weight: 900;
 }
+
+.item-detail-screen__request-button {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 18px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-weight: 900;
+    box-shadow: 0 14px 28px rgba(7, 87, 255, 0.22);
+    cursor: pointer;
+}

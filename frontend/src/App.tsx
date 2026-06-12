@@ -9,6 +9,8 @@ import "./App.css";
 import CreateItemScreen from "./screens/CreateItemScreen";
 import MyPageScreen from "./screens/MyPageScreen";
 import AiProposalScreen from "./screens/AiProposalScreen";
+import TradeRequestScreen from "./screens/TradeRequestScreen";
+import RequestListScreen from "./screens/RequestListScreen";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
@@ -78,6 +80,21 @@ function App() {
             setSelectedItem(null);
             setCurrentScreen("home");
           }}
+          onRequestTrade={(item) => {
+            setSelectedItem(item);
+            setCurrentScreen("tradeRequest");
+          }}
+        />
+      )}
+
+      {currentScreen === "tradeRequest" && selectedItem && (
+        <TradeRequestScreen
+          targetItem={selectedItem}
+          onBack={() => setCurrentScreen("itemDetail")}
+          onSubmitted={() => {
+            setSelectedItem(null);
+            setCurrentScreen("requestList");
+          }}
         />
       )}
 
@@ -86,10 +103,7 @@ function App() {
       )}
 
       {currentScreen === "requestList" && (
-        <section className="placeholder-screen">
-          <h1>リクエスト一覧</h1>
-          <p>交換リクエストを確認する画面です。</p>
-        </section>
+        <RequestListScreen />
       )}
 
       {currentScreen === "myPage" && (

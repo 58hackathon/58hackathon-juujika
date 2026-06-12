@@ -1,20 +1,49 @@
 import { demoTradeRequests } from "./tradeRequestData";
 import type { TradeRequest, TradeRequestStatus } from "./tradeRequestTypes";
 
+let fallbackTradeRequests: TradeRequest[] = [...demoTradeRequests];
+
 export async function getTradeRequests(): Promise<TradeRequest[]> {
-  return demoTradeRequests;
+  return fallbackTradeRequests;
+}
+
+export async function createTradeRequest(input: {
+  targetItemId: string;
+  targetItemTitle: string;
+  offeredItemId: string;
+  offeredItemTitle: string;
+  receiverId: string;
+  receiverName: string;
+  message: string;
+}): Promise<TradeRequest> {
+  const tradeRequest: TradeRequest = {
+    id: `request_${Date.now()}`,
+    requesterId: "current_user",
+    requesterName: "you",
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    ...input,
+  };
+
+  fallbackTradeRequests = [tradeRequest, ...fallbackTradeRequests];
+  return tradeRequest;
 }
 
 export async function updateTradeRequestStatus(
   id: string,
   status: TradeRequestStatus
 ): Promise<TradeRequest | undefined> {
-  const request = demoTradeRequests.find((tradeRequest) => tradeRequest.id === id);
+  const request = fallbackTradeRequests.find((tradeRequest) => tradeRequest.id === id);
   if (!request) return undefined;
 
-  return {
+  const updatedRequest = {
     ...request,
     status,
   };
-}
 
+  fallbackTradeRequests = fallbackTradeRequests.map((tradeRequest) =>
+    tradeRequest.id === id ? updatedRequest : tradeRequest
+  );
+
+  return updatedRequest;
+}

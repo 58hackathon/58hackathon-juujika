@@ -4,9 +4,10 @@ import "./ItemDetailScreen.css";
 type ItemDetailScreenProps = {
     item: Item;
     onBack: () => void;
+    onRequestTrade: (item: Item) => void;
 };
 
-function ItemDetailScreen({ item, onBack }: ItemDetailScreenProps) {
+function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProps) {
     return (
         <section className="item-detail-screen">
             <button className="item-detail-screen__back" onClick={onBack} type="button">
@@ -22,6 +23,13 @@ function ItemDetailScreen({ item, onBack }: ItemDetailScreenProps) {
                 <p>{item.description}</p>
                 <p>希望: {item.wantedItem}</p>
                 <p>出品者: {item.ownerName}</p>
+                <button
+                    className="item-detail-screen__request-button"
+                    onClick={() => onRequestTrade(item)}
+                    type="button"
+                >
+                    交換を申請する
+                </button>
             </div>
         </section>
     );
