@@ -71,6 +71,7 @@ export async function createItem(input: {
   description: string;
   wantedItem: string;
   category: string;
+  price: number;
   imageUrl?: string;
 }): Promise<Item> {
   try {
@@ -106,7 +107,7 @@ export async function createItem(input: {
       status: "available",
       imageUrl: input.imageUrl ?? "/images/demo/generated/reading-card-500.png",
       likes: 0,
-      price: 0,
+      price: input.price,
       createdAt: new Date().toISOString(),
     };
 

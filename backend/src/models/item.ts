@@ -11,6 +11,7 @@ export type Item = {
   status: ItemStatus;
   imageUrl: string;
   likes: number;
+  price: number;
   createdAt: string;
 };
 
@@ -21,5 +22,6 @@ export type CreateItemInput = {
   ownerName: string;
   wantedItem: string;
   category: string;
+  price: number;
   imageUrl?: string;
 };
