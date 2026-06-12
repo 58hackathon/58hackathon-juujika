@@ -11,6 +11,7 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
     const [itemName, setItemName] = useState("");
     const [category, setCategory] = useState("");
     const [condition, setCondition] = useState("");
+    const [price, setPrice] = useState("");
     const [comment, setComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
@@ -54,10 +55,14 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
         };
 
     const hasPhoto = photoUrl !== null;
+    const priceNumber = Number(price);
+    const hasValidPrice =
+        price.trim() !== "" && Number.isInteger(priceNumber) && priceNumber > 0;
     const hasBasicInfo =
         itemName.trim() !== "" &&
         category !== "" &&
         condition !== "" &&
+        hasValidPrice &&
         comment.trim() !== "";
     const hasWantedItems = selectedWantedItems.length > 0;
     const isReadyToSubmit = hasPhoto && hasBasicInfo && hasWantedItems;
@@ -106,6 +111,7 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
         await createItem({
             title: String(formData.get("itemName") ?? ""),
             category: String(formData.get("category") ?? ""),
+            price: priceNumber,
             description: String(formData.get("comment") ?? ""),
             wantedItem: selectedWantedItems.join("、"),
             imageUrl: photoUrl ?? "/images/demo/generated/reading-card-500.png",
@@ -231,6 +237,24 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
                         <option value="やや傷や汚れあり">やや傷や汚れあり</option>
                         <option value="使用感あり">使用感あり</option>
                     </select>
+                </div>
+
+                <div className="create-item-form__field">
+                    <label className="create-item-form__label" htmlFor="price">
+                        価格
+                    </label>
+                    <input
+                        className="create-item-form__input"
+                        id="price"
+                        inputMode="numeric"
+                        min="1"
+                        name="price"
+                        onChange={(event) => setPrice(event.target.value)}
+                        placeholder="例）2500"
+                        step="1"
+                        type="number"
+                        value={price}
+                    />
                 </div>
 
                 <div className="create-item-form__field">

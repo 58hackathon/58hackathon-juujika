@@ -23,6 +23,7 @@ Response:
     "status": "available",
     "imageUrl": "/images/demo/air-force-1.png",
     "likes": 72,
+    "price": 25000,
     "createdAt": "2026-06-08T10:00:00.000Z"
   }
 ]
@@ -35,6 +36,21 @@ Response:
 ### POST /items
 
 商品を出品する。
+
+Request:
+
+```json
+{
+  "title": "NIKE エアフォース1",
+  "description": "数回しか履いていません。",
+  "ownerId": "user_1",
+  "ownerName": "haru_03",
+  "wantedItem": "スニーカー、バッグ、アクセサリー",
+  "category": "ファッション",
+  "price": 25000,
+  "imageUrl": "/images/demo/air-force-1.png"
+}
+```
 
 ## Trade Requests
 
@@ -76,4 +92,3 @@ approved
 rejected
 completed
 ```
-

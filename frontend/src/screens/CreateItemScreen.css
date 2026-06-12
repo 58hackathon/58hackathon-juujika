@@ -70,6 +70,7 @@
     object-fit: cover;
 }
 
+.create-item-form__input,
 .create-item-form__textarea {
     width: 100%;
     border: 1px solid #dbe3ef;
