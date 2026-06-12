@@ -30,18 +30,6 @@ function AppNav({ currentScreen, onNavigate }: AppNavProps) {
                     {item.label}
                 </button>
             ))}
-            <button
-                aria-label="マイページ"
-                className={
-                    currentScreen === "myPage"
-                        ? "app-nav__profile app-nav__profile--active"
-                        : "app-nav__profile"
-                }
-                onClick={() => onNavigate("myPage")}
-                type="button"
-            >
-                <img className="app-nav__profile-image" src="/images/demo/e10821c74b533d465ba888ea66daa30f.jpg" alt="profile-image" />
-            </button>
         </nav>
     );
 }
