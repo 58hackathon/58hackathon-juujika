@@ -5,5 +5,9 @@ service cloud.firestore {
     match /favorites/{favoriteId} {
       allow read, write: if true;
     }
+
+    match /items/{itemId} {
+      allow read, write: if true;
+    }
   }
 }
