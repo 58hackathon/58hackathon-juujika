@@ -6,10 +6,13 @@ export type Item = {
   description: string;
   ownerId: string;
   ownerName: string;
+  condition: string;
   wantedItem: string;
+  wantedItems: string[];
   category: string;
   status: ItemStatus;
   imageUrl: string;
+  imageUrls: string[];
   likes: number;
   price: number;
   createdAt: string;
@@ -20,8 +23,11 @@ export type CreateItemInput = {
   description: string;
   ownerId: string;
   ownerName: string;
-  wantedItem: string;
+  condition?: string;
+  wantedItem?: string;
+  wantedItems?: string[];
   category: string;
   price: number;
   imageUrl?: string;
+  imageUrls?: string[];
 };

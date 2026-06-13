@@ -1,56 +1,123 @@
 import type { Request, Response } from "express";
 
-import { createItem, getItemById, getItems } from "../services/itemService.js";
+import {
+  createItem,
+  getItemById,
+  getItems,
+  ItemServiceError,
+} from "../services/itemService.js";
 
 const requiredCreateItemFields = [
   "title",
   "description",
   "ownerId",
   "ownerName",
-  "wantedItem",
   "category",
 ] as const;
 
-export function listItems(_req: Request, res: Response): void {
-  res.json({ data: getItems() });
+export async function listItems(_req: Request, res: Response): Promise<void> {
+  try {
+    res.json({ data: await getItems() });
+  } catch (error) {
+    sendItemError(res, error);
+  }
 }
 
-export function getItem(req: Request, res: Response): void {
+export async function getItem(req: Request, res: Response): Promise<void> {
   const id = getRouteParam(req.params.id);
   if (!id) {
     res.status(400).json({ error: "id is required" });
     return;
   }
 
-  const item = getItemById(id);
+  try {
+    const item = await getItemById(id);
 
-  if (!item) {
-    res.status(404).json({ error: "Item not found" });
-    return;
+    if (!item) {
+      res.status(404).json({ error: "Item not found" });
+      return;
+    }
+
+    res.json({ data: item });
+  } catch (error) {
+    sendItemError(res, error);
   }
-
-  res.json({ data: item });
 }
 
-export function postItem(req: Request, res: Response): void {
+export async function postItem(req: Request, res: Response): Promise<void> {
   const missingFields = requiredCreateItemFields.filter((field) => {
     const value = req.body[field];
     return typeof value !== "string" || value.trim() === "";
   });
+  const wantedItems = getWantedItems(req.body.wantedItems, req.body.wantedItem);
   const price = Number(req.body.price);
   const hasValidPrice = Number.isInteger(price) && price > 0;
 
-  if (missingFields.length > 0 || !hasValidPrice) {
+  if (missingFields.length > 0 || wantedItems.length === 0 || !hasValidPrice) {
     res.status(400).json({
       error: "Missing required item fields",
-      fields: hasValidPrice ? missingFields : [...missingFields, "price"],
+      fields: [
+        ...missingFields,
+        ...(wantedItems.length === 0 ? ["wantedItem"] : []),
+        ...(!hasValidPrice ? ["price"] : []),
+      ],
     });
     return;
   }
 
-  res.status(201).json({ data: createItem({ ...req.body, price }) });
+  try {
+    const item = await createItem({
+      ...req.body,
+      price,
+      wantedItems,
+      condition: getOptionalString(req.body.condition),
+      imageUrls: getStringArray(req.body.imageUrls, req.body.imageUrl),
+    });
+
+    res.status(201).json({ data: item });
+  } catch (error) {
+    sendItemError(res, error);
+  }
 }
 
 function getRouteParam(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function getWantedItems(
+  values: unknown,
+  fallbackValue: unknown
+): string[] {
+  return getStringArray(values, fallbackValue);
+}
+
+function getStringArray(values: unknown, fallbackValue: unknown): string[] {
+  if (Array.isArray(values)) {
+    return values
+      .filter((value): value is string => typeof value === "string")
+      .map((value) => value.trim())
+      .filter((value) => value !== "");
+  }
+
+  if (typeof fallbackValue === "string" && fallbackValue.trim() !== "") {
+    return fallbackValue
+      .split(/[,\n]/u)
+      .map((value) => value.trim())
+      .filter((value) => value !== "");
+  }
+
+  return [];
+}
+
+function getOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" ? value.trim() : undefined;
+}
+
+function sendItemError(res: Response, error: unknown): void {
+  if (error instanceof ItemServiceError) {
+    res.status(error.statusCode).json({ error: error.message });
+    return;
+  }
+
+  res.status(500).json({ error: "Unexpected item API error" });
 }
