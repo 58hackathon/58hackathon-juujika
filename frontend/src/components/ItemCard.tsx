@@ -8,6 +8,9 @@ type ItemCardProps = {
     onToggleFavorite: (itemId: string) => void;
 };
 
+const HOT_LIKE_THRESHOLD = 40;
+const NEW_ITEM_THRESHOLD_MS = 24 * 60 * 60 * 1000;
+
 function ItemCard({
     item,
     onSelectItem,
@@ -34,6 +37,18 @@ function ItemCard({
         onToggleFavorite(item.id);
     };
     const favoriteCount = item.likes + (isFavorite ? 1 : 0);
+    const createdAtTime = new Date(item.createdAt).getTime();
+    const itemAgeMs = Date.now() - createdAtTime;
+    const isNewItem =
+        Number.isFinite(createdAtTime) &&
+        itemAgeMs >= 0 &&
+        itemAgeMs <= NEW_ITEM_THRESHOLD_MS;
+    const isHotItem = favoriteCount >= HOT_LIKE_THRESHOLD;
+    const featureBadge = isNewItem ? "NEW" : isHotItem ? "HOT" : null;
+    const descriptionPreview =
+        item.description.length > 34
+            ? `${item.description.slice(0, 34)}...`
+            : item.description;
 
     return (
         <article
@@ -46,6 +61,14 @@ function ItemCard({
 
             <div className="item-card__image-area">
                 <img className="item-card__image" src={item.imageUrl} alt={item.title} />
+                <div className="item-card__image-shade" aria-hidden="true" />
+                {featureBadge && (
+                    <span
+                        className={`item-card__image-badge item-card__image-badge--${featureBadge.toLowerCase()}`}
+                    >
+                        {featureBadge}
+                    </span>
+                )}
 
                 <button
                     aria-label={
@@ -76,8 +99,10 @@ function ItemCard({
                 </div>
 
                 <h2 className="item-card__title">{item.title}</h2>
+                <p className="item-card__description">{descriptionPreview}</p>
                 <p className="item-card__wanted">
-                    希望: {item.wantedItem}
+                    <span>希望</span>
+                    {item.wantedItem}
                 </p>
                 <p className="item-card__owner">
                     by {item.ownerName}
@@ -86,6 +111,7 @@ function ItemCard({
                     <div className="item-card__price">
                         ¥{item.price.toLocaleString()}
                     </div>
+                    <span className="item-card__cta">詳しく見る</span>
                 </div>
             </div>
         </article>

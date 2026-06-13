@@ -20,6 +20,12 @@ const statusLabels: Record<TradeRequestStatus, string> = {
     completed: "交換成立",
 };
 
+const itemStatusLabels: Record<Item["status"], string> = {
+    available: "交換募集中",
+    trading: "交渉中",
+    completed: "成立済み",
+};
+
 function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProps) {
     const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
     const isOwnItem = item.ownerId === "current_user";
@@ -50,15 +56,39 @@ function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProp
                 戻る
             </button>
 
-            <img className="item-detail-screen__image" src={item.imageUrl} alt={item.title} />
+            <div className="item-detail-screen__hero">
+                <img className="item-detail-screen__image" src={item.imageUrl} alt={item.title} />
+                <div className="item-detail-screen__hero-overlay">
+                    <span className={`item-detail-screen__hero-status item-detail-screen__hero-status--${item.status}`}>
+                        {itemStatusLabels[item.status]}
+                    </span>
+                    <span className="item-detail-screen__hero-likes">♡ {item.likes}</span>
+                </div>
+            </div>
 
             <div className="item-detail-screen__body">
-                <p className="item-detail-screen__category">{item.category}</p>
-                <h1>{item.title}</h1>
-                <p className="item-detail-screen__price">¥{item.price.toLocaleString()}</p>
-                <p>{item.description}</p>
-                <p>希望: {item.wantedItem}</p>
-                <p>出品者: {item.ownerName}</p>
+                <div className="item-detail-screen__heading">
+                    <div>
+                        <p className="item-detail-screen__category">{item.category}</p>
+                        <h1>{item.title}</h1>
+                    </div>
+                    <p className="item-detail-screen__price">¥{item.price.toLocaleString()}</p>
+                </div>
+
+                <div className="item-detail-screen__info-grid">
+                    <section className="item-detail-screen__info-card item-detail-screen__info-card--wide">
+                        <span>商品のこと</span>
+                        <p>{item.description}</p>
+                    </section>
+                    <section className="item-detail-screen__info-card">
+                        <span>交換したいもの</span>
+                        <p>{item.wantedItem}</p>
+                    </section>
+                    <section className="item-detail-screen__info-card">
+                        <span>出品者</span>
+                        <p>@{item.ownerName}</p>
+                    </section>
+                </div>
                 {isOwnItem ? (
                     <section className="item-detail-screen__owner-panel">
                         <div className="item-detail-screen__owner-heading">
