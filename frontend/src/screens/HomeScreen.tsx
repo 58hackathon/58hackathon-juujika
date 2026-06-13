@@ -29,24 +29,31 @@ function HomeScreen({
     loadItems();
     }, []);
     const filteredItems = items.filter((item) => {
-    const matchesCategory = 
-        activeCategory === "すべて" || item.category === activeCategory;
-    const matchesSearch =
-        item.title.includes(searchText) ||
-        item.wantedItem.includes(searchText) ||
-        item.description.includes(searchText);
+        const matchesCategory =
+            activeCategory === "すべて" || item.category === activeCategory;
+        const matchesSearch =
+            item.title.includes(searchText) ||
+            item.wantedItem.includes(searchText) ||
+            item.description.includes(searchText);
 
-    return matchesCategory && matchesSearch;
-});
+        return matchesCategory && matchesSearch;
+    });
+    const directItems = filteredItems.filter(
+        (item) => item.listingType !== "warehouse"
+    );
+    const warehouseItems = filteredItems.filter(
+        (item) => item.listingType === "warehouse"
+    );
+
     return (
         <section className="home-screen">
             <header className="home-screen__header">
                 <p className="home-screen__eyebrow">物々交換マーケット</p>
                 <div className="home-screen__title-row">
                     <div>
-                        <h1 className="home-screen__title">わらしべ</h1>
+                        <h1 className="home-screen__title">商品一覧</h1>
                         <p className="home-screen__lead">
-                            使わなくなったものを、ほしいものへ交換しよう。
+                            通常出品とAI / ガチャ倉庫の商品を分けて確認できます。
                         </p>
                     </div>
                 </div>
@@ -82,13 +89,13 @@ function HomeScreen({
             </nav>
 
             <div className="home-screen__section-title">
-                <h2>おすすめ</h2>
-                <span>{filteredItems.length}件</span>
+                <h2>通常出品</h2>
+                <span>{directItems.length}件</span>
             </div>
 
-            {filteredItems.length > 0 ? (
+            {directItems.length > 0 ? (
                 <div className="home-screen__grid">
-                    {filteredItems.map((item) => (
+                    {directItems.map((item) => (
                         <ItemCard
                             key={item.id}
                             item={item}
@@ -100,7 +107,30 @@ function HomeScreen({
                 </div>
             ) : (
                 <div className="home-screen__empty">
-                    <p>該当するアイテムがありません</p>
+                    <p>該当する通常出品がありません</p>
+                    <span>検索ワードやカテゴリを変えてみてください。</span>
+                </div>
+            )}
+
+            <div className="home-screen__section-title home-screen__section-title--secondary">
+                <h2>AI / ガチャ倉庫</h2>
+                <span>{warehouseItems.length}件</span>
+            </div>
+
+            {warehouseItems.length > 0 ? (
+                <div className="home-screen__grid">
+                    {warehouseItems.map((item) => (
+                        <ItemCard
+                            key={item.id}
+                            item={item}
+                            onSelectItem={onSelectItem}
+                            showFavoriteButton={false}
+                        />
+                    ))}
+                </div>
+            ) : (
+                <div className="home-screen__empty">
+                    <p>該当する倉庫商品がありません</p>
                     <span>検索ワードやカテゴリを変えてみてください。</span>
                 </div>
             )}

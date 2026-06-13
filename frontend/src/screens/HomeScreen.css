@@ -115,6 +115,10 @@
     margin-bottom: 12px;
 }
 
+.home-screen__section-title--secondary {
+    margin-top: 34px;
+}
+
 .home-screen__section-title h2 {
     margin: 0;
     font-size: 20px;

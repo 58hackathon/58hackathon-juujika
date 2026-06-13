@@ -31,6 +31,7 @@ function ItemDetailScreen({
 }: ItemDetailScreenProps) {
     const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
     const isOwnItem = isCurrentUserResource(item.ownerId, currentUser.id);
+    const isWarehouseItem = item.listingType === "warehouse";
 
     useEffect(() => {
         if (!isOwnItem) {
@@ -67,7 +68,19 @@ function ItemDetailScreen({
                 <p>{item.description}</p>
                 <p>希望: {item.wantedItem}</p>
                 <p>出品者: {item.ownerName}</p>
-                {isOwnItem ? (
+                {isWarehouseItem ? (
+                    <section className="item-detail-screen__warehouse-panel">
+                        <h2>倉庫保管中</h2>
+                        <p>
+                            AI提案やガチャ交換のルート内で使われる商品です。
+                        </p>
+                        <div className="item-detail-screen__warehouse-tags">
+                            {getWarehouseUseCaseLabels(item).map((label) => (
+                                <span key={label}>{label}</span>
+                            ))}
+                        </div>
+                    </section>
+                ) : isOwnItem ? (
                     <section className="item-detail-screen__owner-panel">
                         <div className="item-detail-screen__owner-heading">
                             <h2>届いた交換申請</h2>
@@ -110,6 +123,14 @@ function ItemDetailScreen({
             </div>
         </section>
     );
+}
+
+function getWarehouseUseCaseLabels(item: Item): string[] {
+    const labels = item.warehouseUseCases?.map((useCase) =>
+        useCase === "ai_route" ? "AI提案対象" : "ガチャ対象"
+    ) ?? [];
+
+    return labels.length > 0 ? labels : ["倉庫対象"];
 }
 
 export default ItemDetailScreen;
