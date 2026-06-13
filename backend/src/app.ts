@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 
+import { favoriteRoutes } from "./routes/favoriteRoutes.js";
 import { itemRoutes } from "./routes/itemRoutes.js";
 import { tradeRequestRoutes } from "./routes/tradeRequestRoutes.js";
 
@@ -15,5 +16,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/trade-requests", tradeRequestRoutes);
 app.use("/api/trade-requests", tradeRequestRoutes);
+app.use("/favorites", favoriteRoutes);
+app.use("/api/favorites", favoriteRoutes);
 app.use("/items", itemRoutes);
 app.use("/api/items", itemRoutes);
