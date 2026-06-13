@@ -16,12 +16,17 @@ type TradeSuggestionsResponse = {
   source: "gemini" | "fallback";
 };
 
+export type AiTradeRoutesResult = {
+  routes: AiTradeRoute[];
+  source: AiTradeRoute["source"];
+};
+
 export async function getAiTradeRoutes(
   input: AiTradeRouteRequest
-): Promise<AiTradeRoute[]> {
+): Promise<AiTradeRoutesResult> {
   try {
     const sourceItem = findItem(input.items, input.sourceItemId);
-    if (!sourceItem) return [];
+    if (!sourceItem) return { routes: [], source: "mock" };
 
     const candidateItems = getCandidateItems(input);
     const response = await fetch("/api/trade-requests/suggestions", {
@@ -30,8 +35,8 @@ export async function getAiTradeRoutes(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sourceItemId: input.sourceItemId,
-        candidateItemIds: candidateItems.map((item) => item.id),
+        targetItem: toSuggestionItem(sourceItem),
+        candidateItems: candidateItems.map(toSuggestionItem),
         limit: input.limit ?? 3,
       }),
     });
@@ -41,16 +46,21 @@ export async function getAiTradeRoutes(
     }
 
     const json: TradeSuggestionsResponse = await response.json();
-    return createRoutesFromSuggestions(input, json);
+    return {
+      routes: createRoutesFromSuggestions(input, json),
+      source: json.source,
+    };
   } catch (error) {
     console.warn("AI提案APIにつながらないためモック提案を表示します", error);
-    return createMockAiTradeRoutes(input);
+    return { routes: createMockAiTradeRoutes(input), source: "mock" };
   }
 }
 
 function getCandidateItems(input: AiTradeRouteRequest): Item[] {
   return input.items
     .filter((item) => item.id !== input.sourceItemId)
+    .filter((item) => item.listingType === "warehouse")
+    .filter((item) => item.warehouseUseCase === "ai_route")
     .filter((item) => item.status === "available")
     .sort((left, right) => {
       if (left.id === input.goalItemId) return -1;
@@ -123,6 +133,7 @@ function createSuggestionRoute({
       "出品商品と候補商品のカテゴリ・希望条件・説明をもとに提案",
       suggestion.reason,
     ],
+    source,
   };
 }
 
@@ -210,11 +221,23 @@ function createRoute({
       "ゴール商品の希望条件に近づく中継商品を選択",
       "価格ではなく、希望一致・カテゴリ相性・人気度を参考にスコア化",
     ],
+    source: "mock",
   };
 }
 
 function findItem(items: Item[], itemId: string): Item | undefined {
   return items.find((item) => item.id === itemId);
+}
+
+function toSuggestionItem(item: Item) {
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    description: item.description,
+    wantedItem: item.wantedItem,
+    ownerName: item.ownerName,
+  };
 }
 
 function calculateMockScore(

@@ -12,6 +12,7 @@ export type AiTradeRoute = {
   title: string;
   matchScore: number;
   summary: string;
+  source: "gemini" | "fallback" | "mock";
   steps: AiRouteStep[];
   traceReasons: string[];
 };
