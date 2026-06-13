@@ -152,6 +152,7 @@
 .home-screen__listing-filter-button--active {
     background: var(--color-primary);
     color: #ffffff;
+    box-shadow: 0 12px 22px rgba(36, 87, 255, 0.18);
 }
 
 .home-screen__section-title {
