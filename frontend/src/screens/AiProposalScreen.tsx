@@ -523,7 +523,7 @@ function GuidedMode({
 
                             <div className="ai-action-row">
                                 <button className="ai-primary-button" onClick={onAcceptProposal} type="button">
-                                    この提案で進める
+                                    ルートに追加
                                 </button>
                                 <button
                                     className="ai-secondary-button"
@@ -535,9 +535,6 @@ function GuidedMode({
                                 </button>
                                 <button className="ai-secondary-button" onClick={onNextCandidate} type="button">
                                     別候補を見る
-                                </button>
-                                <button className="ai-soft-button" type="button">
-                                    保留
                                 </button>
                             </div>
                         </>
