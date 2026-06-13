@@ -1,4 +1,9 @@
-import type { CreateItemInput, Item } from "../models/item.js";
+import type {
+  CreateItemInput,
+  Item,
+  ItemGachaInput,
+  ItemGachaResult,
+} from "../models/item.js";
 
 const itemsCollectionName = "items";
 const firestoreDatabaseId = "(default)";
@@ -124,6 +129,26 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   return toItem(document);
 }
 
+export async function getGachaItem(
+  input: ItemGachaInput = {}
+): Promise<ItemGachaResult | undefined> {
+  const candidates = (await getItems()).filter((item) =>
+    matchesGachaInput(item, input)
+  );
+
+  if (candidates.length === 0) {
+    return undefined;
+  }
+
+  const item = candidates[Math.floor(Math.random() * candidates.length)];
+
+  return {
+    item,
+    reason: buildGachaReason(item, input),
+    poolSize: candidates.length,
+  };
+}
+
 function toNewItem(input: CreateItemInput): Item {
   const wantedItems = normalizeStringArray(input.wantedItems, input.wantedItem);
   const imageUrls = normalizeStringArray(input.imageUrls, input.imageUrl);
@@ -145,6 +170,44 @@ function toNewItem(input: CreateItemInput): Item {
     price: input.price,
     createdAt: new Date().toISOString(),
   };
+}
+
+function matchesGachaInput(item: Item, input: ItemGachaInput): boolean {
+  return (
+    item.status === "available" &&
+    item.id !== input.excludeItemId &&
+    item.id !== input.sourceItemId &&
+    item.ownerId !== input.userId &&
+    matchesOptionalText(item.category, input.category) &&
+    matchesOptionalMin(item.price, input.minPrice) &&
+    matchesOptionalMax(item.price, input.maxPrice)
+  );
+}
+
+function matchesOptionalText(value: string, expected: string | undefined): boolean {
+  return expected === undefined || value === expected;
+}
+
+function matchesOptionalMin(value: number, min: number | undefined): boolean {
+  return min === undefined || value >= min;
+}
+
+function matchesOptionalMax(value: number, max: number | undefined): boolean {
+  return max === undefined || value <= max;
+}
+
+function buildGachaReason(item: Item, input: ItemGachaInput): string {
+  const reasons = ["Randomly selected from available items"];
+
+  if (input.category && item.category === input.category) {
+    reasons.push(`category matched: ${item.category}`);
+  }
+
+  if (input.minPrice !== undefined || input.maxPrice !== undefined) {
+    reasons.push(`price: ${item.price}`);
+  }
+
+  return reasons.join("; ");
 }
 
 async function requestFirestore<T>(

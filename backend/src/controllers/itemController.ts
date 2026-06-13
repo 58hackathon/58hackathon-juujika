@@ -2,10 +2,12 @@ import type { Request, Response } from "express";
 
 import {
   createItem,
+  getGachaItem as getGachaItemResult,
   getItemById,
   getItems,
   ItemServiceError,
 } from "../services/itemService.js";
+import type { ItemGachaInput } from "../models/item.js";
 
 const requiredCreateItemFields = [
   "title",
@@ -39,6 +41,26 @@ export async function getItem(req: Request, res: Response): Promise<void> {
     }
 
     res.json({ data: item });
+  } catch (error) {
+    sendItemError(res, error);
+  }
+}
+
+export async function getGachaItem(req: Request, res: Response): Promise<void> {
+  const input = toGachaInput(req.query);
+  if (typeof input === "string") {
+    res.status(400).json({ error: input });
+    return;
+  }
+
+  try {
+    const result = await getGachaItemResult(input);
+    if (!result) {
+      res.status(404).json({ error: "No gacha candidates found" });
+      return;
+    }
+
+    res.json({ data: result });
   } catch (error) {
     sendItemError(res, error);
   }
@@ -82,6 +104,50 @@ export async function postItem(req: Request, res: Response): Promise<void> {
 
 function getRouteParam(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+function toGachaInput(value: Request["query"]): ItemGachaInput | string {
+  const minPrice = getOptionalQueryNumber(value.minPrice, "minPrice");
+  if (typeof minPrice === "string") {
+    return minPrice;
+  }
+
+  const maxPrice = getOptionalQueryNumber(value.maxPrice, "maxPrice");
+  if (typeof maxPrice === "string") {
+    return maxPrice;
+  }
+
+  return {
+    userId: getQueryParam(value.userId),
+    excludeItemId: getQueryParam(value.excludeItemId),
+    sourceItemId: getQueryParam(value.sourceItemId),
+    category: getQueryParam(value.category),
+    minPrice,
+    maxPrice,
+  };
+}
+
+function getQueryParam(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== ""
+    ? value.trim()
+    : undefined;
+}
+
+function getOptionalQueryNumber(
+  value: unknown,
+  field: string
+): number | undefined | string {
+  if (value === undefined) return undefined;
+  if (typeof value !== "string" || value.trim() === "") {
+    return `${field} must be a number`;
+  }
+
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    return `${field} must be a number`;
+  }
+
+  return numberValue;
 }
 
 function getWantedItems(
