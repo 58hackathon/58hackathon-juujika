@@ -11,7 +11,6 @@ type AiProposalScreenProps = {
 };
 
 type AiMode = "guided" | "auto";
-type AiRuntimeStatus = "idle" | "loading" | "gemini" | "fallback" | "mock";
 type AutoStatus = "running" | "paused";
 
 const fallbackImageUrl = "/images/demo/generated/reading-card-500.png";
@@ -24,7 +23,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     const [candidateIndex, setCandidateIndex] = useState(0);
     const [acceptedRouteItemIds, setAcceptedRouteItemIds] = useState<string[]>([]);
     const [aiRoutes, setAiRoutes] = useState<AiTradeRoute[]>([]);
-    const [aiRuntimeStatus, setAiRuntimeStatus] = useState<AiRuntimeStatus>("idle");
     const [autoStatus, setAutoStatus] = useState<AutoStatus>("running");
 
     useEffect(() => {
@@ -67,8 +65,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
         let isActive = true;
 
         const loadAiRoutes = async () => {
-            setAiRuntimeStatus("loading");
-
             const result = await getAiTradeRoutes({
                 sourceItemId,
                 goalItemId,
@@ -79,7 +75,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
             if (!isActive) return;
 
             setAiRoutes(result.routes);
-            setAiRuntimeStatus(result.source);
         };
 
         loadAiRoutes();
@@ -189,7 +184,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
                     candidate={guidedCandidate}
                     candidateIndex={candidateIndex}
                     aiRoute={activeAiRoute}
-                    aiRuntimeStatus={aiRuntimeStatus}
                     goalItem={goalItem}
                     goalItems={goalItems}
                     onAcceptProposal={handleAcceptProposal}
@@ -203,7 +197,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
             ) : (
                 <AutoMode
                     aiRoute={autoAiRoute}
-                    aiRuntimeStatus={aiRuntimeStatus}
                     autoCandidate={autoCandidate}
                     autoStatus={autoStatus}
                     currentUser={currentUser}
@@ -226,7 +219,6 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
 
 function GuidedMode({
     aiRoute,
-    aiRuntimeStatus,
     candidate,
     candidateIndex,
     goalItem,
@@ -240,7 +232,6 @@ function GuidedMode({
     sourceItems,
 }: {
     aiRoute: AiTradeRoute | undefined;
-    aiRuntimeStatus: AiRuntimeStatus;
     candidate: Item | undefined;
     candidateIndex: number;
     goalItem: Item | undefined;
@@ -292,14 +283,6 @@ function GuidedMode({
                 <button onClick={onNextCandidate} type="button">
                     次の提案を見る
                 </button>
-            </div>
-
-            <div className={`ai-runtime-status ai-runtime-status--${aiRuntimeStatus}`}>
-                <div>
-                    <p>AI接続状態</p>
-                    <strong>{getAiRuntimeLabel(aiRuntimeStatus)}</strong>
-                </div>
-                <span>{getAiRuntimeDescription(aiRuntimeStatus)}</span>
             </div>
 
             <section className="ai-guided-layout">
@@ -377,7 +360,6 @@ function GuidedMode({
 
 function AutoMode({
     aiRoute,
-    aiRuntimeStatus,
     autoCandidate,
     autoStatus,
     currentUser,
@@ -390,7 +372,6 @@ function AutoMode({
     sourceItems,
 }: {
     aiRoute: AiTradeRoute | undefined;
-    aiRuntimeStatus: AiRuntimeStatus;
     autoCandidate: Item | undefined;
     autoStatus: AutoStatus;
     currentUser: RegisteredUser;
@@ -495,14 +476,6 @@ function AutoMode({
                         <button className="ai-status-band__button" onClick={onToggleAutoStatus} type="button">
                             {isPaused ? "再開" : "一時停止"}
                         </button>
-                    </div>
-
-                    <div className={`ai-runtime-status ai-runtime-status--auto ai-runtime-status--${aiRuntimeStatus}`}>
-                        <div>
-                            <p>AI接続状態</p>
-                            <strong>{getAiRuntimeLabel(aiRuntimeStatus)}</strong>
-                        </div>
-                        <span>{getAiRuntimeDescription(aiRuntimeStatus)}</span>
                     </div>
 
                     <div className="ai-progress-lane" aria-label="自動交換の進行状況">
@@ -653,35 +626,6 @@ function getWarehouseUseCaseText(item: Item): string {
     if (item.warehouseUseCase === "gacha") return "ガチャ対象";
 
     return "AI対象";
-}
-
-function getAiRuntimeLabel(status: AiRuntimeStatus): string {
-    if (status === "gemini") return "Geminiで生成";
-    if (status === "fallback") return "fallbackで提案";
-    if (status === "mock") return "モック提案";
-    if (status === "loading") return "AI確認中";
-
-    return "待機中";
-}
-
-function getAiRuntimeDescription(status: AiRuntimeStatus): string {
-    if (status === "gemini") {
-        return "バックエンド経由でGemini APIの応答を使っています。";
-    }
-
-    if (status === "fallback") {
-        return "Gemini APIに失敗したため、バックエンドの代替ロジックで提案しています。";
-    }
-
-    if (status === "mock") {
-        return "API接続に失敗したため、フロントのモック提案を表示しています。";
-    }
-
-    if (status === "loading") {
-        return "バックエンドAI APIへ問い合わせています。";
-    }
-
-    return "開始商品と目標商品を選ぶとAI接続状態を確認します。";
 }
 
 function getRouteStepLabel(index: number, length: number): string {
