@@ -29,6 +29,7 @@ import TradeRequestScreen from "./screens/TradeRequestScreen";
 import RequestListScreen from "./screens/RequestListScreen";
 import TradeRoomScreen from "./screens/TradeRoomScreen";
 import type { TradeRequest } from "./features/tradeRequests/tradeRequestTypes";
+import GachaScreen from "./screens/GachaScreen";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<RegisteredUser | null>(() =>
@@ -220,6 +221,10 @@ function App() {
             setCurrentScreen("requestDetail");
           }}
         />
+      )}
+
+      {currentUser && currentScreen === "gacha" && (
+        <GachaScreen currentUser={currentUser} />
       )}
 
       {currentUser && currentScreen === "requestDetail" && selectedTradeRequest && (

@@ -6,5 +6,6 @@ export type Screen =
   | "requestList"
   | "requestDetail"
   | "createItem"
+  | "gacha"
   | "myPage"
   | "aiProposal";
