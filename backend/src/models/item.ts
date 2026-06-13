@@ -1,4 +1,6 @@
 export type ItemStatus = "available" | "trading" | "completed";
+export type ItemListingType = "direct" | "warehouse";
+export type ItemWarehouseUseCase = "ai_route" | "gacha";
 
 export type Item = {
   id: string;
@@ -15,6 +17,8 @@ export type Item = {
   imageUrls: string[];
   likes: number;
   price: number;
+  listingType: ItemListingType;
+  warehouseUseCases: ItemWarehouseUseCase[];
   createdAt: string;
 };
 
@@ -28,6 +32,8 @@ export type CreateItemInput = {
   wantedItems?: string[];
   category: string;
   price: number;
+  listingType?: ItemListingType;
+  warehouseUseCases?: ItemWarehouseUseCase[];
   imageUrl?: string;
   imageUrls?: string[];
 };

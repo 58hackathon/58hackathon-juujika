@@ -72,6 +72,8 @@ export async function postItem(req: Request, res: Response): Promise<void> {
       wantedItems,
       condition: getOptionalString(req.body.condition),
       imageUrls: getStringArray(req.body.imageUrls, req.body.imageUrl),
+      listingType: getItemListingType(req.body.listingType),
+      warehouseUseCases: getWarehouseUseCases(req.body.warehouseUseCases),
     });
 
     res.status(201).json({ data: item });
@@ -111,6 +113,19 @@ function getStringArray(values: unknown, fallbackValue: unknown): string[] {
 
 function getOptionalString(value: unknown): string | undefined {
   return typeof value === "string" ? value.trim() : undefined;
+}
+
+function getItemListingType(value: unknown): "direct" | "warehouse" | undefined {
+  return value === "direct" || value === "warehouse" ? value : undefined;
+}
+
+function getWarehouseUseCases(value: unknown): Array<"ai_route" | "gacha"> {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter(
+    (useCase): useCase is "ai_route" | "gacha" =>
+      useCase === "ai_route" || useCase === "gacha"
+  );
 }
 
 function sendItemError(res: Response, error: unknown): void {

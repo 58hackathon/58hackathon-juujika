@@ -51,6 +51,8 @@ const fallbackItems: Item[] = [
     imageUrls: ["/images/demo/air-force-1.png"],
     likes: 72,
     price: 25000,
+    listingType: "direct",
+    warehouseUseCases: [],
     createdAt: "2026-06-08T10:00:00.000Z",
   },
   {
@@ -68,6 +70,8 @@ const fallbackItems: Item[] = [
     imageUrls: ["/images/demo/new-era-cap.png"],
     likes: 31,
     price: 1400,
+    listingType: "direct",
+    warehouseUseCases: [],
     createdAt: "2026-06-08T11:00:00.000Z",
   },
 ];
@@ -143,6 +147,8 @@ function toNewItem(input: CreateItemInput): Item {
     imageUrls,
     likes: 0,
     price: input.price,
+    listingType: input.listingType ?? "direct",
+    warehouseUseCases: input.warehouseUseCases ?? [],
     createdAt: new Date().toISOString(),
   };
 }
@@ -218,6 +224,8 @@ function toFirestoreDocument(item: Item): FirestoreDocument {
       imageUrls: toFirestoreStringArray(item.imageUrls),
       likes: { integerValue: item.likes },
       price: { integerValue: item.price },
+      listingType: { stringValue: item.listingType },
+      warehouseUseCases: toFirestoreStringArray(item.warehouseUseCases),
       createdAt: { timestampValue: item.createdAt },
     },
   };
@@ -245,6 +253,8 @@ function toItem(document: FirestoreDocument): Item {
     imageUrls: imageUrls.length > 0 ? imageUrls : normalizeStringArray(undefined, imageUrl),
     likes: getIntegerValue(fields.likes),
     price: getIntegerValue(fields.price),
+    listingType: getItemListingType(fields.listingType),
+    warehouseUseCases: getWarehouseUseCases(fields.warehouseUseCases),
     createdAt: getTimestampValue(fields.createdAt),
   };
 }
@@ -301,6 +311,21 @@ function getItemStatus(value: FirestoreValue | undefined): Item["status"] {
   return status === "trading" || status === "completed"
     ? status
     : "available";
+}
+
+function getItemListingType(
+  value: FirestoreValue | undefined
+): Item["listingType"] {
+  return getStringValue(value) === "warehouse" ? "warehouse" : "direct";
+}
+
+function getWarehouseUseCases(
+  value: FirestoreValue | undefined
+): Item["warehouseUseCases"] {
+  return getStringArrayValue(value).filter(
+    (useCase): useCase is Item["warehouseUseCases"][number] =>
+      useCase === "ai_route" || useCase === "gacha"
+  );
 }
 
 function getIntegerValue(value: FirestoreValue | undefined): number {
