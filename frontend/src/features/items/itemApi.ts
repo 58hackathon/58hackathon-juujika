@@ -1,8 +1,9 @@
 import type { Item, ItemGachaInput, ItemGachaResult } from "./itemTypes";
 import { demoItems } from "./itemData";
 
-type ApiItem = Omit<Item, "price"> & {
+type ApiItem = Omit<Item, "price" | "listingType"> & {
   price?: number;
+  listingType?: Item["listingType"];
 };
 
 type ItemResponse = {
@@ -27,6 +28,7 @@ function toItem(apiItem: ApiItem): Item {
   return {
     ...apiItem,
     price: apiItem.price ?? 0,
+    listingType: apiItem.listingType ?? "direct",
   };
 }
 
@@ -144,6 +146,7 @@ export async function createItem(input: {
       imageUrl: input.imageUrl ?? "/images/demo/generated/reading-card-500.png",
       likes: 0,
       price: input.price,
+      listingType: "direct",
       createdAt: new Date().toISOString(),
     };
 
@@ -176,7 +179,7 @@ function matchesGachaInput(item: Item, input: ItemGachaInput): boolean {
     item.ownerId !== input.userId &&
     item.ownerId !== "current_user" &&
     item.listingType === "warehouse" &&
-    item.warehouseUseCases?.includes("gacha") === true &&
+    item.warehouseUseCase === "gacha" &&
     matchesOptionalText(item.category, input.category) &&
     matchesOptionalMin(item.price, input.minPrice) &&
     matchesOptionalMax(item.price, input.maxPrice)

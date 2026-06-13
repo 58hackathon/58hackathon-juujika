@@ -17,8 +17,8 @@ export type Item = {
   imageUrls?: string[];
   likes: number;
   price: number;
-  listingType?: ItemListingType;
-  warehouseUseCases?: ItemWarehouseUseCase[];
+  listingType: ItemListingType;
+  warehouseUseCase?: ItemWarehouseUseCase;
   createdAt: string;
 };
 

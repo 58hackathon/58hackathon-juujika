@@ -66,7 +66,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
             Array.from(
                 new Set(
                     items
-                        .filter((item) => item.warehouseUseCases?.includes("gacha"))
+                        .filter((item) => item.warehouseUseCase === "gacha")
                         .map((item) => item.category)
                 )
             ),
@@ -84,7 +84,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                 item.id !== sourceItem?.id &&
                 !isCurrentUserResource(item.ownerId, currentUser.id) &&
                 item.listingType === "warehouse" &&
-                item.warehouseUseCases?.includes("gacha") === true &&
+                item.warehouseUseCase === "gacha" &&
                 matchesCategory &&
                 item.price >= priceBand.minPrice &&
                 (priceBand.maxPrice === undefined || item.price <= priceBand.maxPrice)

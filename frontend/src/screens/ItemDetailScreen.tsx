@@ -126,11 +126,10 @@ function ItemDetailScreen({
 }
 
 function getWarehouseUseCaseLabels(item: Item): string[] {
-    const labels = item.warehouseUseCases?.map((useCase) =>
-        useCase === "ai_route" ? "AI提案対象" : "ガチャ対象"
-    ) ?? [];
+    if (item.warehouseUseCase === "ai_route") return ["AI提案対象"];
+    if (item.warehouseUseCase === "gacha") return ["ガチャ対象"];
 
-    return labels.length > 0 ? labels : ["倉庫対象"];
+    return ["倉庫対象"];
 }
 
 export default ItemDetailScreen;

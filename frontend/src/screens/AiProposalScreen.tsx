@@ -28,6 +28,7 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
             setItems(itemsFromApi);
 
             const firstWarehouseItem =
+                itemsFromApi.find(isAiWarehouseItem) ??
                 itemsFromApi.find((item) => item.listingType === "warehouse") ??
                 itemsFromApi[0];
             const firstGoalItem =
@@ -45,9 +46,7 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
 
     const warehouseItems = useMemo(() => {
         const filteredItems = items.filter(
-            (item) =>
-                item.listingType === "warehouse" &&
-                (item.warehouseUseCases?.includes("ai_route") ?? true)
+            (item) => isAiWarehouseItem(item)
         );
 
         return filteredItems.length > 0 ? filteredItems : items;
@@ -60,7 +59,7 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
         () =>
             items
                 .filter((item) => item.id !== sourceItem?.id && item.id !== goalItem?.id)
-                .filter((item) => item.listingType === "warehouse")
+                .filter(isAiWarehouseItem)
                 .filter((item) => item.status === "available")
                 .sort(
                     (left, right) =>
@@ -516,6 +515,13 @@ function findItem(items: Item[], itemId: string): Item | undefined {
     return items.find((item) => item.id === itemId);
 }
 
+function isAiWarehouseItem(item: Item): boolean {
+    return (
+        item.listingType === "warehouse" &&
+        item.warehouseUseCase === "ai_route"
+    );
+}
+
 function buildRouteItems(
     items: Item[],
     acceptedRouteItemIds: string[],
@@ -564,12 +570,8 @@ function formatPriceGap(sourceItem: Item | undefined, candidate: Item): string {
 }
 
 function getWarehouseUseCaseText(item: Item): string {
-    if (item.warehouseUseCases?.includes("ai_route") && item.warehouseUseCases.includes("gacha")) {
-        return "AI / ガチャ対象";
-    }
-
-    if (item.warehouseUseCases?.includes("ai_route")) return "AI対象";
-    if (item.warehouseUseCases?.includes("gacha")) return "ガチャ対象";
+    if (item.warehouseUseCase === "ai_route") return "AI対象";
+    if (item.warehouseUseCase === "gacha") return "ガチャ対象";
 
     return "AI対象";
 }
