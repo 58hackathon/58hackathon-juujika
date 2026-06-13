@@ -165,6 +165,8 @@
 .item-detail-screen__request-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 18px 32px rgba(36, 87, 255, 0.28);
+}
+
 .item-detail-screen__warehouse-panel {
     margin-top: 20px;
     padding: 16px;
