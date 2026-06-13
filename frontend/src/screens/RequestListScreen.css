@@ -1,12 +1,12 @@
 .request-list-screen {
     width: min(100%, 560px);
     margin: 0 auto;
-    padding: 24px 16px 96px;
+    padding: 112px 16px 96px;
 }
 
 .request-list-screen__header {
     position: sticky;
-    top: 0;
+    top: 96px;
     z-index: 2;
     margin: 0 -16px 18px;
     padding: 16px 16px 0;
@@ -36,14 +36,17 @@
     min-height: 44px;
     border: 0;
     border-radius: 999px;
-    background: transparent;
+    background: #ffffff;
     color: var(--color-text);
     font-weight: 900;
     cursor: pointer;
+    box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 .request-list-screen__tab--active {
-    background: #f3f4f6;
+    background: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(7, 87, 255, 0.2);
 }
 
 .request-list-screen__tab-badge {
@@ -56,6 +59,11 @@
     background: var(--color-primary);
     color: #ffffff;
     font-size: 12px;
+}
+
+.request-list-screen__tab--active .request-list-screen__tab-badge {
+    background: #ffffff;
+    color: var(--color-primary);
 }
 
 .request-list-screen__list {
@@ -214,6 +222,10 @@
 @media (max-width: 720px) {
     .request-list-screen {
         padding-top: 24px;
+    }
+
+    .request-list-screen__header {
+        top: 0;
     }
 
     .request-list-screen__card {

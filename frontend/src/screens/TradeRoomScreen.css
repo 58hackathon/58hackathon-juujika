@@ -1,28 +1,31 @@
 .trade-room-screen {
-    width: min(100%, 430px);
+    width: min(100%, 900px);
     margin: 0 auto;
-    padding: 18px 14px 96px;
+    padding: 112px 16px 96px;
 }
 
 .trade-room-screen__phone {
-    min-height: calc(100vh - 36px);
-    padding: 18px 16px 22px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px;
     border: 1px solid var(--color-border);
-    border-radius: 30px;
+    border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 18px 44px rgba(31, 41, 55, 0.12);
 }
 
 .trade-room-screen__top {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: 40px 1fr 40px;
     align-items: center;
-    margin-bottom: 22px;
+    margin-bottom: 4px;
 }
 
 .trade-room-screen__top h1 {
     margin: 0;
-    font-size: 19px;
+    font-size: 28px;
     text-align: center;
 }
 
@@ -39,23 +42,23 @@
 }
 
 .trade-room-screen__section {
-    margin-bottom: 16px;
+    margin-bottom: 0;
 }
 
 .trade-room-screen__section h2 {
     margin: 0 0 8px;
     color: #374151;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 900;
 }
 
 .trade-room-screen__product {
     display: grid;
-    grid-template-columns: 86px minmax(0, 1fr);
-    gap: 14px;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 16px;
     align-items: center;
-    min-height: 104px;
-    padding: 10px;
+    min-height: 136px;
+    padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 14px;
     background: #ffffff;
@@ -64,7 +67,7 @@
 }
 
 .trade-room-screen__product img {
-    width: 86px;
+    width: 112px;
     aspect-ratio: 1;
     border-radius: 10px;
     background: #f3f4f6;
@@ -74,7 +77,7 @@
 .trade-room-screen__product strong {
     display: block;
     overflow-wrap: anywhere;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 900;
 }
 
@@ -91,6 +94,13 @@
     grid-template-columns: 1fr auto;
     gap: 8px;
     align-items: end;
+}
+
+.trade-room-screen__section:nth-of-type(3),
+.trade-room-screen__celebration,
+.trade-room-screen__primary,
+.trade-room-screen__secondary {
+    grid-column: 1 / -1;
 }
 
 .trade-room-screen__bubble {
@@ -118,7 +128,7 @@
 
 .trade-room-screen__celebration {
     position: relative;
-    margin: 18px 0 20px;
+    margin: 6px 0 4px;
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 16px 34px rgba(183, 255, 22, 0.22);
@@ -161,7 +171,8 @@
 }
 
 .trade-room-screen__primary {
-    margin-bottom: 12px;
+    margin-top: 4px;
+    margin-bottom: 0;
     background: var(--color-primary);
     color: #ffffff;
     box-shadow: 0 14px 24px rgba(7, 87, 255, 0.24);
@@ -264,19 +275,23 @@
 
 @media (max-width: 720px) {
     .trade-room-screen {
-        padding: 0;
+        padding: 24px 16px 96px;
         width: 100%;
     }
 
     .trade-room-screen__phone {
-        min-height: 100vh;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
+        grid-template-columns: 1fr;
+        padding: 16px;
+        border-radius: 8px;
+    }
+
+    .trade-room-screen__top h1 {
+        font-size: 20px;
     }
 
     .trade-room-screen__product {
         grid-template-columns: 78px minmax(0, 1fr);
+        min-height: 102px;
     }
 
     .trade-room-screen__product img {

@@ -58,7 +58,11 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
         (request) => request.receiverId === "current_user"
     ).length;
 
-    const handleUpdateStatus = async (requestId: string, status: TradeRequestStatus) => {
+    const handleUpdateStatus = async (
+        requestId: string,
+        status: TradeRequestStatus,
+        options?: { openDetail?: boolean }
+    ) => {
         const updatedRequest = await updateTradeRequestStatus(requestId, status);
         if (!updatedRequest) return;
 
@@ -67,6 +71,10 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
                 request.id === requestId ? updatedRequest : request
             )
         );
+
+        if (options?.openDetail) {
+            onOpenTrade(updatedRequest);
+        }
     };
 
     return (
@@ -179,7 +187,11 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
                                     ) : canCompleteRequest ? (
                                         <button
                                             className="request-list-screen__button request-list-screen__button--primary"
-                                            onClick={() => handleUpdateStatus(request.id, "completed")}
+                                            onClick={() =>
+                                                handleUpdateStatus(request.id, "completed", {
+                                                    openDetail: true,
+                                                })
+                                            }
                                             type="button"
                                         >
                                             交換成立にする
