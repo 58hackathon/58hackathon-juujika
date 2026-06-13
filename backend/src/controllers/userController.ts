@@ -3,45 +3,79 @@ import type { Request, Response } from "express";
 import type { CreateUserInput, ShippingAddress } from "../models/user.js";
 import {
   createUser,
+  getUserByToken,
   getUserById,
   getUsers,
   isUserPlan,
+  UserServiceError,
 } from "../services/userService.js";
 
-export function listUsers(_req: Request, res: Response): void {
-  res.json({ data: getUsers() });
+export async function listUsers(_req: Request, res: Response): Promise<void> {
+  try {
+    res.json({ data: await getUsers() });
+  } catch (error) {
+    sendUserError(res, error);
+  }
 }
 
-export function getUser(req: Request, res: Response): void {
+export async function getUser(req: Request, res: Response): Promise<void> {
   const id = getRouteParam(req.params.id);
   if (!id) {
     res.status(400).json({ error: "id is required" });
     return;
   }
 
-  const user = getUserById(id);
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
+  try {
+    const user = await getUserById(id);
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json({ data: user });
+  } catch (error) {
+    sendUserError(res, error);
+  }
+}
+
+export async function getCurrentUser(req: Request, res: Response): Promise<void> {
+  const token = getBearerToken(req.headers.authorization);
+  if (!token) {
+    res.status(401).json({ error: "Bearer token is required" });
     return;
   }
 
-  res.json({ data: user });
+  try {
+    const user = await getUserByToken(token);
+    if (!user) {
+      res.status(401).json({ error: "Invalid token" });
+      return;
+    }
+
+    res.json({ data: user });
+  } catch (error) {
+    sendUserError(res, error);
+  }
 }
 
-export function postUser(req: Request, res: Response): void {
+export async function postUser(req: Request, res: Response): Promise<void> {
   const input = toCreateUserInput(req.body);
   if (typeof input === "string") {
     res.status(400).json({ error: input });
     return;
   }
 
-  const user = createUser(input);
-  if (!user) {
-    res.status(409).json({ error: "email is already registered" });
-    return;
-  }
+  try {
+    const user = await createUser(input);
+    if (!user) {
+      res.status(409).json({ error: "email is already registered" });
+      return;
+    }
 
-  res.status(201).json({ data: user });
+    res.status(201).json({ data: user });
+  } catch (error) {
+    sendUserError(res, error);
+  }
 }
 
 function toCreateUserInput(value: unknown): CreateUserInput | string {
@@ -117,4 +151,22 @@ function getStringField(
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getBearerToken(value: string | undefined): string | undefined {
+  if (!value?.startsWith("Bearer ")) {
+    return undefined;
+  }
+
+  const token = value.slice("Bearer ".length).trim();
+  return token === "" ? undefined : token;
+}
+
+function sendUserError(res: Response, error: unknown): void {
+  if (error instanceof UserServiceError) {
+    res.status(error.statusCode).json({ error: error.message });
+    return;
+  }
+
+  res.status(500).json({ error: "Unexpected user API error" });
 }

@@ -14,6 +14,7 @@ export type User = {
   plan: UserPlan;
   shippingAddress: ShippingAddress;
   createdAt: string;
+  authToken?: string;
 };
 
 export type CreateUserInput = {
