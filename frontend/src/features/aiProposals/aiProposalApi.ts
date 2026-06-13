@@ -4,35 +4,131 @@ import type {
   AiTradeRouteRequest,
 } from "./aiProposalTypes";
 
-type AiTradeRouteResponse = {
-  routes: AiTradeRoute[];
+type TradeSuggestion = {
+  itemId: string;
+  title: string;
+  score: number;
+  reason: string;
+};
+
+type TradeSuggestionsResponse = {
+  suggestions: TradeSuggestion[];
+  source: "gemini" | "fallback";
 };
 
 export async function getAiTradeRoutes(
   input: AiTradeRouteRequest
 ): Promise<AiTradeRoute[]> {
   try {
-    const response = await fetch("/api/ai/trade-routes", {
+    const sourceItem = findItem(input.items, input.sourceItemId);
+    if (!sourceItem) return [];
+
+    const candidateItems = getCandidateItems(input);
+    const response = await fetch("/api/trade-requests/suggestions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         sourceItemId: input.sourceItemId,
-        goalItemId: input.goalItemId,
+        candidateItemIds: candidateItems.map((item) => item.id),
+        limit: input.limit ?? 3,
       }),
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch AI trade routes");
+      throw new Error("Failed to fetch AI suggestions");
     }
 
-    const json: AiTradeRouteResponse = await response.json();
-    return json.routes;
+    const json: TradeSuggestionsResponse = await response.json();
+    return createRoutesFromSuggestions(input, json);
   } catch (error) {
     console.warn("AI提案APIにつながらないためモック提案を表示します", error);
     return createMockAiTradeRoutes(input);
   }
+}
+
+function getCandidateItems(input: AiTradeRouteRequest): Item[] {
+  return input.items
+    .filter((item) => item.id !== input.sourceItemId)
+    .filter((item) => item.status === "available")
+    .sort((left, right) => {
+      if (left.id === input.goalItemId) return -1;
+      if (right.id === input.goalItemId) return 1;
+      return 0;
+    });
+}
+
+function createRoutesFromSuggestions(
+  input: AiTradeRouteRequest,
+  response: TradeSuggestionsResponse
+): AiTradeRoute[] {
+  const sourceItem = findItem(input.items, input.sourceItemId);
+  if (!sourceItem) return [];
+
+  const suggestions = response.suggestions
+    .map((suggestion, index) => {
+      const suggestedItem = findItem(input.items, suggestion.itemId);
+      if (!suggestedItem) return undefined;
+
+      return createSuggestionRoute({
+        id: `suggestion_${sourceItem.id}_${suggestion.itemId}_${index}`,
+        sourceItem,
+        suggestedItem,
+        suggestion,
+        source: response.source,
+      });
+    })
+    .filter((route): route is AiTradeRoute => Boolean(route));
+
+  return suggestions.length > 0 ? suggestions : createMockAiTradeRoutes(input);
+}
+
+function createSuggestionRoute({
+  id,
+  sourceItem,
+  suggestedItem,
+  suggestion,
+  source,
+}: {
+  id: string;
+  sourceItem: Item;
+  suggestedItem: Item;
+  suggestion: TradeSuggestion;
+  source: TradeSuggestionsResponse["source"];
+}): AiTradeRoute {
+  return {
+    id,
+    title: `${suggestion.title}への交換候補`,
+    matchScore: normalizeScore(suggestion.score),
+    summary: suggestion.reason,
+    steps: [
+      {
+        itemId: sourceItem.id,
+        title: sourceItem.title,
+        imageUrl: sourceItem.imageUrl,
+        matchReason: "あなたの出品からスタート",
+      },
+      {
+        itemId: suggestedItem.id,
+        title: suggestedItem.title,
+        imageUrl: suggestedItem.imageUrl,
+        matchReason: suggestion.reason,
+      },
+    ],
+    traceReasons: [
+      source === "gemini"
+        ? "バックエンドAI APIがGeminiで候補を評価"
+        : "バックエンドAI APIのfallback候補を使用",
+      "出品商品と候補商品のカテゴリ・希望条件・説明をもとに提案",
+      suggestion.reason,
+    ],
+  };
+}
+
+function normalizeScore(score: number): number {
+  if (!Number.isFinite(score)) return 0;
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 
 function createMockAiTradeRoutes(input: AiTradeRouteRequest): AiTradeRoute[] {

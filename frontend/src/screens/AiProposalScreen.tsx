@@ -3,11 +3,15 @@ import { getAiTradeRoutes } from "../features/aiProposals/aiProposalApi";
 import type { AiTradeRoute } from "../features/aiProposals/aiProposalTypes";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./AiProposalScreen.css";
 
-const currentUserId = "current_user";
+type AiProposalScreenProps = {
+    currentUser: RegisteredUser;
+};
 
-function AiProposalScreen() {
+function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [sourceItemId, setSourceItemId] = useState("");
     const [goalItemId, setGoalItemId] = useState("");
@@ -21,7 +25,9 @@ function AiProposalScreen() {
             setItems(itemsFromApi);
 
             const firstMyItem =
-                itemsFromApi.find((item) => item.ownerId === currentUserId) ??
+                itemsFromApi.find((item) =>
+                    isCurrentUserResource(item.ownerId, currentUser.id)
+                ) ??
                 itemsFromApi[0];
             const firstGoalItem = itemsFromApi.find(
                 (item) => item.id !== firstMyItem?.id
@@ -32,12 +38,14 @@ function AiProposalScreen() {
         };
 
         loadItems();
-    }, []);
+    }, [currentUser.id]);
 
     const sourceItems = useMemo(() => {
-        const myItems = items.filter((item) => item.ownerId === currentUserId);
+        const myItems = items.filter((item) =>
+            isCurrentUserResource(item.ownerId, currentUser.id)
+        );
         return myItems.length > 0 ? myItems : items.slice(0, 4);
-    }, [items]);
+    }, [currentUser.id, items]);
 
     const goalItems = items.filter((item) => item.id !== sourceItemId);
     const sourceItem = items.find((item) => item.id === sourceItemId);
@@ -67,16 +75,10 @@ function AiProposalScreen() {
     return (
         <section className="ai-proposal-screen">
             <header className="ai-proposal-screen__header">
-                <div className="ai-proposal-screen__marks" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                </div>
                 <p className="ai-proposal-screen__eyebrow">交換提案AI</p>
-                <h1>AI提案候補</h1>
+                <h1>AI提案</h1>
                 <p>
-                    1つに決め打ちせず、ユーザーが納得してルートを選べるようにします。
+                    出品した商品から、欲しい商品へ近づく交換ルートを探します。
                 </p>
             </header>
 
@@ -126,8 +128,8 @@ function AiProposalScreen() {
 
             {routes.length === 0 ? (
                 <section className="ai-proposal-empty">
-                    <h2>出品商品と目標商品を選んでください</h2>
-                    <p>後からバックエンドの `/api/ai/trade-routes` に差し替えられる構造です。</p>
+                    <h2>商品を選んで候補を出しましょう</h2>
+                    <p>価格差や相手の希望を見ながら、成立しやすいルートを提案します。</p>
                 </section>
             ) : (
                 <>

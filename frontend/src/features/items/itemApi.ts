@@ -69,6 +69,8 @@ export async function getItemById(id: string): Promise<Item | undefined> {
 export async function createItem(input: {
   title: string;
   description: string;
+  ownerId: string;
+  ownerName: string;
   wantedItem: string;
   category: string;
   price: number;
@@ -82,8 +84,6 @@ export async function createItem(input: {
       },
       body: JSON.stringify({
         ...input,
-        ownerId: "current_user",
-        ownerName: "you",
       }),
     });
 
@@ -100,8 +100,8 @@ export async function createItem(input: {
       id: `demo_${Date.now()}`,
       title: input.title,
       description: input.description,
-      ownerId: "current_user",
-      ownerName: "you",
+      ownerId: input.ownerId,
+      ownerName: input.ownerName,
       wantedItem: input.wantedItem,
       category: input.category,
       status: "available",

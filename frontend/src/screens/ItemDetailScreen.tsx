@@ -5,10 +5,13 @@ import type {
     TradeRequest,
     TradeRequestStatus,
 } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./ItemDetailScreen.css";
 
 type ItemDetailScreenProps = {
     item: Item;
+    currentUser: RegisteredUser;
     onBack: () => void;
     onRequestTrade: (item: Item) => void;
 };
@@ -20,9 +23,15 @@ const statusLabels: Record<TradeRequestStatus, string> = {
     completed: "交換成立",
 };
 
-function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProps) {
+function ItemDetailScreen({
+    item,
+    currentUser,
+    onBack,
+    onRequestTrade,
+}: ItemDetailScreenProps) {
     const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
-    const isOwnItem = item.ownerId === "current_user";
+    const isOwnItem = isCurrentUserResource(item.ownerId, currentUser.id);
+    const isWarehouseItem = item.listingType === "warehouse";
 
     useEffect(() => {
         if (!isOwnItem) {
@@ -36,13 +45,13 @@ function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProp
                 requests.filter(
                     (request) =>
                         request.targetItemId === item.id &&
-                        request.receiverId === "current_user"
+                        isCurrentUserResource(request.receiverId, currentUser.id)
                 )
             );
         };
 
         loadReceivedRequests();
-    }, [isOwnItem, item.id]);
+    }, [currentUser.id, isOwnItem, item.id]);
 
     return (
         <section className="item-detail-screen">
@@ -59,7 +68,19 @@ function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProp
                 <p>{item.description}</p>
                 <p>希望: {item.wantedItem}</p>
                 <p>出品者: {item.ownerName}</p>
-                {isOwnItem ? (
+                {isWarehouseItem ? (
+                    <section className="item-detail-screen__warehouse-panel">
+                        <h2>倉庫保管中</h2>
+                        <p>
+                            AI提案やガチャ交換のルート内で使われる商品です。
+                        </p>
+                        <div className="item-detail-screen__warehouse-tags">
+                            {getWarehouseUseCaseLabels(item).map((label) => (
+                                <span key={label}>{label}</span>
+                            ))}
+                        </div>
+                    </section>
+                ) : isOwnItem ? (
                     <section className="item-detail-screen__owner-panel">
                         <div className="item-detail-screen__owner-heading">
                             <h2>届いた交換申請</h2>
@@ -102,6 +123,14 @@ function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProp
             </div>
         </section>
     );
+}
+
+function getWarehouseUseCaseLabels(item: Item): string[] {
+    const labels = item.warehouseUseCases?.map((useCase) =>
+        useCase === "ai_route" ? "AI提案対象" : "ガチャ対象"
+    ) ?? [];
+
+    return labels.length > 0 ? labels : ["倉庫対象"];
 }
 
 export default ItemDetailScreen;

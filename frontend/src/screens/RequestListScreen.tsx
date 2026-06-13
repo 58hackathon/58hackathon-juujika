@@ -9,11 +9,14 @@ import type {
     TradeRequest,
     TradeRequestStatus,
 } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./RequestListScreen.css";
 
 type RequestTab = "sent" | "received";
 
 type RequestListScreenProps = {
+    currentUser: RegisteredUser;
     onOpenTrade: (request: TradeRequest) => void;
 };
 
@@ -24,7 +27,7 @@ const statusLabels: Record<TradeRequestStatus, string> = {
     completed: "交換成立",
 };
 
-function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
+function RequestListScreen({ currentUser, onOpenTrade }: RequestListScreenProps) {
     const [activeTab, setActiveTab] = useState<RequestTab>("sent");
     const [requests, setRequests] = useState<TradeRequest[]>([]);
     const [items, setItems] = useState<Item[]>([]);
@@ -47,15 +50,15 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
         () =>
             requests.filter((request) =>
                 activeTab === "sent"
-                    ? request.requesterId === "current_user"
-                    : request.receiverId === "current_user"
+                    ? isCurrentUserResource(request.requesterId, currentUser.id)
+                    : isCurrentUserResource(request.receiverId, currentUser.id)
             ),
-        [activeTab, requests]
+        [activeTab, currentUser.id, requests]
     );
 
     const findItem = (itemId: string) => items.find((item) => item.id === itemId);
     const receivedCount = requests.filter(
-        (request) => request.receiverId === "current_user"
+        (request) => isCurrentUserResource(request.receiverId, currentUser.id)
     ).length;
 
     const handleUpdateStatus = async (

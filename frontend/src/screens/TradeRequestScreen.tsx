@@ -2,9 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import { createTradeRequest } from "../features/tradeRequests/tradeRequestApi";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./TradeRequestScreen.css";
 
 type TradeRequestScreenProps = {
+    currentUser: RegisteredUser;
     targetItem: Item;
     onBack: () => void;
     onSubmitted: () => void;
@@ -13,6 +16,7 @@ type TradeRequestScreenProps = {
 const maxMessageLength = 200;
 
 function TradeRequestScreen({
+    currentUser,
     targetItem,
     onBack,
     onSubmitted,
@@ -29,16 +33,29 @@ function TradeRequestScreen({
         const loadItems = async () => {
             const itemsFromApi = await getItems();
             setItems(itemsFromApi);
-            const firstOffer = itemsFromApi.find((item) => item.id !== targetItem.id);
+            const firstOffer = itemsFromApi.find(
+                (item) =>
+                    item.id !== targetItem.id &&
+                    item.status === "available" &&
+                    isCurrentUserResource(item.ownerId, currentUser.id)
+            );
             setSelectedOfferId(firstOffer?.id ?? "");
         };
 
         loadItems();
-    }, [targetItem.id]);
+    }, [currentUser.id, targetItem.id]);
 
     const offerItems = useMemo(
-        () => items.filter((item) => item.id !== targetItem.id && item.status === "available").slice(0, 6),
-        [items, targetItem.id]
+        () =>
+            items
+                .filter(
+                    (item) =>
+                        item.id !== targetItem.id &&
+                        item.status === "available" &&
+                        isCurrentUserResource(item.ownerId, currentUser.id)
+                )
+                .slice(0, 6),
+        [currentUser.id, items, targetItem.id]
     );
 
     const selectedOffer = offerItems.find((item) => item.id === selectedOfferId);
@@ -53,6 +70,8 @@ function TradeRequestScreen({
             targetItemTitle: targetItem.title,
             offeredItemId: selectedOffer.id,
             offeredItemTitle: selectedOffer.title,
+            requesterId: currentUser.id,
+            requesterName: currentUser.username,
             receiverId: targetItem.ownerId,
             receiverName: targetItem.ownerName,
             message: message.trim(),
@@ -136,24 +155,31 @@ function TradeRequestScreen({
                             <h2>あなたの商品を選択</h2>
                             <span>{offerItems.length}件から選択</span>
                         </div>
-                        <div className="trade-request-screen__offers">
-                            {offerItems.map((item) => (
-                                <button
-                                    className={
-                                        item.id === selectedOfferId
-                                            ? "trade-request-screen__offer-card trade-request-screen__offer-card--selected"
-                                            : "trade-request-screen__offer-card"
-                                    }
-                                    key={item.id}
-                                    onClick={() => setSelectedOfferId(item.id)}
-                                    type="button"
-                                >
-                                    <img className="trade-request-screen__offer-image" src={item.imageUrl} alt="" />
-                                    <h3>{item.title}</h3>
-                                    <p className="trade-request-screen__offer-price">¥{item.price.toLocaleString()}</p>
-                                </button>
-                            ))}
-                        </div>
+                        {offerItems.length > 0 ? (
+                            <div className="trade-request-screen__offers">
+                                {offerItems.map((item) => (
+                                    <button
+                                        className={
+                                            item.id === selectedOfferId
+                                                ? "trade-request-screen__offer-card trade-request-screen__offer-card--selected"
+                                                : "trade-request-screen__offer-card"
+                                        }
+                                        key={item.id}
+                                        onClick={() => setSelectedOfferId(item.id)}
+                                        type="button"
+                                    >
+                                        <img className="trade-request-screen__offer-image" src={item.imageUrl} alt="" />
+                                        <h3>{item.title}</h3>
+                                        <p className="trade-request-screen__offer-price">¥{item.price.toLocaleString()}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="trade-request-screen__empty-offers">
+                                <h3>先に交換に出す商品を登録しましょう</h3>
+                                <p>交換申請には、自分が出品中の商品が1つ以上必要です。</p>
+                            </div>
+                        )}
                     </section>
 
                     <section className="trade-request-screen__section">

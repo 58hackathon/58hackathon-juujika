@@ -9,7 +9,15 @@ type HomeScreenProps = {
     favoriteItemIds: string[];
     onToggleFavorite: (itemId: string) => void;
 };
+
+type ListingFilter = "all" | "direct" | "warehouse";
+
 const categories = ["すべて", "ファッション", "バッグ", "家電", "クーポン"];
+const listingFilters: Array<{ label: string; value: ListingFilter }> = [
+    { label: "すべて", value: "all" },
+    { label: "通常出品", value: "direct" },
+    { label: "倉庫", value: "warehouse" },
+];
 
 function HomeScreen({
     onSelectItem,
@@ -17,6 +25,8 @@ function HomeScreen({
     onToggleFavorite,
 }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
+    const [activeListingFilter, setActiveListingFilter] =
+        useState<ListingFilter>("all");
     const [searchText, setSearchText] = useState("");
     const [items, setItems] = useState<Item[]>([]);
 
@@ -29,24 +39,33 @@ function HomeScreen({
     loadItems();
     }, []);
     const filteredItems = items.filter((item) => {
-    const matchesCategory = 
-        activeCategory === "すべて" || item.category === activeCategory;
-    const matchesSearch =
-        item.title.includes(searchText) ||
-        item.wantedItem.includes(searchText) ||
-        item.description.includes(searchText);
+        const matchesCategory =
+            activeCategory === "すべて" || item.category === activeCategory;
+        const matchesSearch =
+            item.title.includes(searchText) ||
+            item.wantedItem.includes(searchText) ||
+            item.description.includes(searchText);
 
-    return matchesCategory && matchesSearch;
-});
+        return matchesCategory && matchesSearch;
+    });
+    const directItems = filteredItems.filter(
+        (item) => item.listingType !== "warehouse"
+    );
+    const warehouseItems = filteredItems.filter(
+        (item) => item.listingType === "warehouse"
+    );
+    const shouldShowDirectItems = activeListingFilter !== "warehouse";
+    const shouldShowWarehouseItems = activeListingFilter !== "direct";
+
     return (
         <section className="home-screen">
             <header className="home-screen__header">
                 <p className="home-screen__eyebrow">物々交換マーケット</p>
                 <div className="home-screen__title-row">
                     <div>
-                        <h1 className="home-screen__title">わらしべ</h1>
+                        <h1 className="home-screen__title">商品一覧</h1>
                         <p className="home-screen__lead">
-                            使わなくなったものを、ほしいものへ交換しよう。
+                            通常出品とAI / ガチャ倉庫の商品を分けて確認できます。
                         </p>
                     </div>
                 </div>
@@ -81,27 +100,81 @@ function HomeScreen({
                 ))}
             </nav>
 
-            <div className="home-screen__section-title">
-                <h2>おすすめ</h2>
-                <span>{filteredItems.length}件</span>
+            <div className="home-screen__listing-filter" aria-label="表示する商品">
+                {listingFilters.map((filter) => (
+                    <button
+                        className={
+                            filter.value === activeListingFilter
+                                ? "home-screen__listing-filter-button home-screen__listing-filter-button--active"
+                                : "home-screen__listing-filter-button"
+                        }
+                        key={filter.value}
+                        onClick={() => setActiveListingFilter(filter.value)}
+                        type="button"
+                    >
+                        {filter.label}
+                    </button>
+                ))}
             </div>
 
-            {filteredItems.length > 0 ? (
-                <div className="home-screen__grid">
-                    {filteredItems.map((item) => (
-                        <ItemCard
-                            key={item.id}
-                            item={item}
-                            isFavorite={favoriteItemIds.includes(item.id)}
-                            onSelectItem={onSelectItem}
-                            onToggleFavorite={onToggleFavorite}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="home-screen__empty">
-                    <p>該当するアイテムがありません</p>
-                    <span>検索ワードやカテゴリを変えてみてください。</span>
+            {shouldShowDirectItems && (
+                <>
+                    <div className="home-screen__section-title">
+                        <h2>通常出品</h2>
+                        <span>{directItems.length}件</span>
+                    </div>
+
+                    {directItems.length > 0 ? (
+                        <div className="home-screen__grid">
+                            {directItems.map((item) => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    isFavorite={favoriteItemIds.includes(item.id)}
+                                    onSelectItem={onSelectItem}
+                                    onToggleFavorite={onToggleFavorite}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="home-screen__empty">
+                            <p>該当する通常出品がありません</p>
+                            <span>検索ワードやカテゴリを変えてみてください。</span>
+                        </div>
+                    )}
+                </>
+            )}
+
+            {shouldShowWarehouseItems && (
+                <div
+                    className={
+                        shouldShowDirectItems
+                            ? "home-screen__warehouse-section"
+                            : undefined
+                    }
+                >
+                    <div className="home-screen__section-title">
+                        <h2>AI / ガチャ倉庫</h2>
+                        <span>{warehouseItems.length}件</span>
+                    </div>
+
+                    {warehouseItems.length > 0 ? (
+                        <div className="home-screen__grid">
+                            {warehouseItems.map((item) => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    onSelectItem={onSelectItem}
+                                    showFavoriteButton={false}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="home-screen__empty">
+                            <p>該当する倉庫商品がありません</p>
+                            <span>検索ワードやカテゴリを変えてみてください。</span>
+                        </div>
+                    )}
                 </div>
             )}
         </section>

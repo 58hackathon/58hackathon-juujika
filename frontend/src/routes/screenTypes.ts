@@ -1,4 +1,5 @@
 export type Screen =
+  | "accountRegistration"
   | "home"
   | "itemDetail"
   | "tradeRequest"

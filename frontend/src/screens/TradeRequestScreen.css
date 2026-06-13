@@ -200,6 +200,27 @@
     font-weight: 900;
 }
 
+.trade-request-screen__empty-offers {
+    padding: 18px;
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.trade-request-screen__empty-offers h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 15px;
+}
+
+.trade-request-screen__empty-offers p {
+    margin: 6px 0 0;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.6;
+}
+
 .trade-request-screen__textarea {
     width: 100%;
     min-height: 132px;

@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { getItemById } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import type { TradeRequest } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./TradeRoomScreen.css";
 
 type TradeRoomScreenProps = {
+    currentUser: RegisteredUser;
     request: TradeRequest;
     onBack: () => void;
 };
@@ -37,14 +40,10 @@ function TradeItemRow({
     );
 }
 
-function TradeRoomScreen({ request, onBack }: TradeRoomScreenProps) {
+function TradeRoomScreen({ currentUser, request, onBack }: TradeRoomScreenProps) {
     const [targetItem, setTargetItem] = useState<Item | undefined>();
     const [offeredItem, setOfferedItem] = useState<Item | undefined>();
-    const partnerName =
-        request.requesterId === "current_user"
-            ? request.receiverName
-            : request.requesterName;
-    const isRequester = request.requesterId === "current_user";
+    const isRequester = isCurrentUserResource(request.requesterId, currentUser.id);
     const partnerItem = isRequester ? targetItem : offeredItem;
     const myItem = isRequester ? offeredItem : targetItem;
     const partnerItemTitle = isRequester

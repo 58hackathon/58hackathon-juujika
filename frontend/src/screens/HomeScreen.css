@@ -91,7 +91,7 @@
 .home-screen__categories {
     display: flex;
     gap: 10px;
-    margin-bottom: 26px;
+    margin-bottom: 14px;
     overflow-x: auto;
     padding: 2px 0 6px;
 }
@@ -123,11 +123,47 @@
     box-shadow: 0 12px 22px rgba(36, 87, 255, 0.18);
 }
 
+.home-screen__listing-filter {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 24px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.home-screen__listing-filter-button {
+    min-width: 0;
+    height: 38px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #374151;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.home-screen__listing-filter-button:hover {
+    background: #f1f5f3;
+}
+
+.home-screen__listing-filter-button--active {
+    background: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 12px 22px rgba(36, 87, 255, 0.18);
+}
+
 .home-screen__section-title {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     margin-bottom: 14px;
+}
+
+.home-screen__warehouse-section {
+    margin-top: 34px;
 }
 
 .home-screen__section-title h2 {
