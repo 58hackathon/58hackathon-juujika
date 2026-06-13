@@ -1,5 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Screen } from "./routes/screenTypes";
+import {
+  createFavorite,
+  deleteFavorite,
+  getFavorites,
+} from "./features/favorites/favoriteApi";
 import { getItemById } from "./features/items/itemApi";
 import type { Item } from "./features/items/itemTypes";
 import {
@@ -7,7 +12,10 @@ import {
   getStoredCurrentUser,
   saveCurrentUser,
 } from "./features/users/userApi";
-import { isCurrentUserResource } from "./features/users/currentUser";
+import {
+  isCurrentUserResource,
+  legacyCurrentUserId,
+} from "./features/users/currentUser";
 import type { RegisteredUser } from "./features/users/userTypes";
 import HomeScreen from "./screens/HomeScreen";
 import ItemDetailScreen from "./screens/ItemDetailScreen";
@@ -32,6 +40,35 @@ function App() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [selectedTradeRequest, setSelectedTradeRequest] = useState<TradeRequest | null>(null);
   const [favoriteItemIds, setFavoriteItemIds] = useState<string[]>([]);
+  const favoriteUserId = legacyCurrentUserId;
+
+  useEffect(() => {
+    if (!currentUser) {
+      setFavoriteItemIds([]);
+      return;
+    }
+
+    let isActive = true;
+
+    const loadFavorites = async () => {
+      try {
+        const favorites = await getFavorites(favoriteUserId);
+        if (!isActive) return;
+
+        setFavoriteItemIds(
+          Array.from(new Set(favorites.map((favorite) => favorite.itemId)))
+        );
+      } catch (error) {
+        console.warn("お気に入り一覧の取得に失敗しました", error);
+      }
+    };
+
+    loadFavorites();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentUser, favoriteUserId]);
 
   const handleNavigate = (screen: Screen) => {
     if (!currentUser && screen !== "accountRegistration") {
@@ -59,14 +96,37 @@ function App() {
     setCurrentScreen("accountRegistration");
   };
 
-  const handleToggleFavorite = (itemId: string) => {
+  const handleToggleFavorite = async (itemId: string) => {
+    const isFavorite = favoriteItemIds.includes(itemId);
+
     setFavoriteItemIds((currentIds) => {
-      if (currentIds.includes(itemId)) {
+      if (isFavorite) {
         return currentIds.filter((currentId) => currentId !== itemId);
       }
 
-      return [...currentIds, itemId];
+      return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
     });
+
+    try {
+      if (isFavorite) {
+        await deleteFavorite(itemId, favoriteUserId);
+      } else {
+        await createFavorite({
+          userId: favoriteUserId,
+          itemId,
+        });
+      }
+    } catch (error) {
+      console.warn("お気に入りの更新に失敗しました", error);
+
+      setFavoriteItemIds((currentIds) => {
+        if (isFavorite) {
+          return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
+        }
+
+        return currentIds.filter((currentId) => currentId !== itemId);
+      });
+    }
   };
 
   return (
