@@ -37,3 +37,18 @@ export type CreateItemInput = {
   imageUrl?: string;
   imageUrls?: string[];
 };
+
+export type ItemGachaInput = {
+  userId?: string;
+  excludeItemId?: string;
+  sourceItemId?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+};
+
+export type ItemGachaResult = {
+  item: Item;
+  reason: string;
+  poolSize: number;
+};
