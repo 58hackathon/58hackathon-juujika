@@ -9,5 +9,9 @@ service cloud.firestore {
     match /items/{itemId} {
       allow read, write: if true;
     }
+
+    match /users/{userId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -41,7 +41,7 @@ function App() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [selectedTradeRequest, setSelectedTradeRequest] = useState<TradeRequest | null>(null);
   const [favoriteItemIds, setFavoriteItemIds] = useState<string[]>([]);
-  const favoriteUserId = legacyCurrentUserId;
+  const favoriteUserId = currentUser?.id ?? legacyCurrentUserId;
 
   useEffect(() => {
     if (!currentUser) {

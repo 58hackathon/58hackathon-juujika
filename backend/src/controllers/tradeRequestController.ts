@@ -6,6 +6,8 @@ import type {
   TradeSuggestionItem,
   TradeRequestStatus,
 } from "../models/tradeRequest.js";
+import type { Item } from "../models/item.js";
+import { getItems } from "../services/itemService.js";
 import {
   createTradeRequest as createTradeRequestRecord,
   getTradeRequestById,
@@ -112,7 +114,7 @@ export async function postTradeSuggestions(
   req: Request,
   res: Response
 ): Promise<void> {
-  const input = toTradeSuggestionInput(req.body);
+  const input = await toTradeSuggestionInput(req.body);
   if (typeof input === "string") {
     res.status(400).json({ error: input });
     return;
@@ -165,11 +167,23 @@ function toCreateTradeRequestInput(
   return input;
 }
 
-function toTradeSuggestionInput(value: unknown): TradeSuggestionInput | string {
+async function toTradeSuggestionInput(
+  value: unknown
+): Promise<TradeSuggestionInput | string> {
   if (!isRecord(value)) {
     return "request body must be an object";
   }
 
+  if (value.sourceItemId !== undefined || value.candidateItemIds !== undefined) {
+    return toTradeSuggestionInputFromIds(value);
+  }
+
+  return toTradeSuggestionInputFromItems(value);
+}
+
+function toTradeSuggestionInputFromItems(
+  value: Record<string, unknown>
+): TradeSuggestionInput | string {
   const targetItem = toTradeSuggestionItem(value.targetItem, "targetItem");
   if (typeof targetItem === "string") {
     return targetItem;
@@ -203,6 +217,38 @@ function toTradeSuggestionInput(value: unknown): TradeSuggestionInput | string {
   };
 }
 
+async function toTradeSuggestionInputFromIds(
+  value: Record<string, unknown>
+): Promise<TradeSuggestionInput | string> {
+  const sourceItemId = getStringField(value, "sourceItemId");
+  if (!sourceItemId) {
+    return "sourceItemId is required";
+  }
+
+  const candidateItemIds = getStringArrayField(value, "candidateItemIds");
+  if (typeof candidateItemIds === "string") {
+    return candidateItemIds;
+  }
+
+  const limit = getOptionalNumberField(value, "limit");
+  if (typeof limit === "string") {
+    return limit;
+  }
+
+  const itemById = await getItemMap();
+
+  return {
+    targetItem: toTradeSuggestionItemFromItem(
+      itemById.get(sourceItemId),
+      sourceItemId
+    ),
+    candidateItems: candidateItemIds.map((itemId) =>
+      toTradeSuggestionItemFromItem(itemById.get(itemId), itemId)
+    ),
+    limit,
+  };
+}
+
 function toTradeSuggestionItem(
   value: unknown,
   label: string
@@ -232,6 +278,36 @@ function toTradeSuggestionItem(
   return item;
 }
 
+async function getItemMap(): Promise<Map<string, Item>> {
+  try {
+    const items = await getItems();
+    return new Map(items.map((item) => [item.id, item]));
+  } catch {
+    return new Map();
+  }
+}
+
+function toTradeSuggestionItemFromItem(
+  item: Item | undefined,
+  fallbackId: string
+): TradeSuggestionItem {
+  if (!item) {
+    return {
+      id: fallbackId,
+      title: fallbackId,
+    };
+  }
+
+  return {
+    id: item.id,
+    title: item.title,
+    category: item.category,
+    description: item.description,
+    wantedItem: item.wantedItem,
+    ownerName: item.ownerName,
+  };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -254,6 +330,26 @@ function getStringField(
   return typeof fieldValue === "string" && fieldValue.trim() !== ""
     ? fieldValue.trim()
     : undefined;
+}
+
+function getStringArrayField(
+  value: Record<string, unknown>,
+  field: string
+): string[] | string {
+  const fieldValue = value[field];
+  if (!Array.isArray(fieldValue)) {
+    return `${field} must be an array`;
+  }
+
+  const values = fieldValue
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item !== "");
+
+  if (values.length !== fieldValue.length) {
+    return `${field} must contain only strings`;
+  }
+
+  return values;
 }
 
 function getOptionalNumberField(
