@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ConfirmationNotice from "../components/ConfirmationNotice";
 import { getGachaItem, getItems } from "../features/items/itemApi";
 import type { Item, ItemGachaResult } from "../features/items/itemTypes";
 import { getGachaPriceBand } from "../features/items/gachaPriceBands";
@@ -30,6 +31,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
     const [completedExchange, setCompletedExchange] =
         useState<CompletedGachaExchange>();
     const [status, setStatus] = useState<GachaStatus>("idle");
+    const [isExchangeConfirmOpen, setIsExchangeConfirmOpen] = useState(false);
 
     useEffect(() => {
         const loadItems = async () => {
@@ -97,18 +99,27 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
     const handleSourceChange = (itemId: string) => {
         setSourceItemId(itemId);
         setCompletedExchange(undefined);
+        setIsExchangeConfirmOpen(false);
         setStatus("idle");
     };
 
     const handleCategoryChange = (category: string) => {
         setSelectedCategory(category);
         setCompletedExchange(undefined);
+        setIsExchangeConfirmOpen(false);
         setStatus("idle");
+    };
+
+    const handleExchangeClick = () => {
+        if (!canExchange) return;
+
+        setIsExchangeConfirmOpen(true);
     };
 
     const handleExchange = async () => {
         if (!sourceItem || !priceBand) return;
 
+        setIsExchangeConfirmOpen(false);
         const startedAt = Date.now();
         setStatus("exchanging");
         setCompletedExchange(undefined);
@@ -256,7 +267,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                         </div>
                         <div className="gacha-screen__machine-body">
                             <p>BLIND RANDOM SWAP</p>
-                            <button disabled={!canExchange} onClick={handleExchange} type="button">
+                            <button disabled={!canExchange} onClick={handleExchangeClick} type="button">
                                 {getExchangeButtonLabel(status)}
                             </button>
                         </div>
@@ -327,6 +338,34 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                     )
                 )}
             </section>
+
+            <ConfirmationNotice
+                cancelLabel="条件を見直す"
+                confirmLabel="ガチャを回す"
+                description="実行すると、あなたの商品を出してガチャ候補から相手の商品が確定します。成立後に届いた商品が表示されます。"
+                details={
+                    sourceItem && priceBand
+                        ? [
+                            { label: "出す商品", value: sourceItem.title },
+                            { label: "価格帯", value: priceBand.label },
+                            {
+                                label: "カテゴリ",
+                                value:
+                                    selectedCategory === allCategoriesValue
+                                        ? "すべて"
+                                        : selectedCategory,
+                            },
+                            { label: "候補数", value: `${candidatePool.length}件` },
+                        ]
+                        : []
+                }
+                isOpen={isExchangeConfirmOpen}
+                onCancel={() => setIsExchangeConfirmOpen(false)}
+                onConfirm={() => {
+                    void handleExchange();
+                }}
+                title="この条件でガチャ交換しますか？"
+            />
         </section>
     );
 }
