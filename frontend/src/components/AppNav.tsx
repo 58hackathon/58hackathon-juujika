@@ -9,6 +9,7 @@ type AppNavProps = {
 const navItems: { screen: Screen; label: string }[] = [
     { screen: "home", label: "商品一覧" },
     { screen: "createItem", label: "出品" },
+    { screen: "gacha", label: "ガチャ" },
     { screen: "requestList", label: "リクエスト" },
     { screen: "aiProposal", label: "AI提案"},
 ];
