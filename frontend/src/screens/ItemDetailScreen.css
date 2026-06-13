@@ -2,6 +2,7 @@
     width: min(100%, 720px);
     margin: 0 auto;
     padding: 24px 16px 48px;
+    transform: scale(0.9);
 }
 
 .item-detail-screen__back {
