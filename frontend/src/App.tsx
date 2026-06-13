@@ -11,15 +11,19 @@ import MyPageScreen from "./screens/MyPageScreen";
 import AiProposalScreen from "./screens/AiProposalScreen";
 import TradeRequestScreen from "./screens/TradeRequestScreen";
 import RequestListScreen from "./screens/RequestListScreen";
+import TradeRoomScreen from "./screens/TradeRoomScreen";
+import type { TradeRequest } from "./features/tradeRequests/tradeRequestTypes";
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("home");
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [selectedTradeRequest, setSelectedTradeRequest] = useState<TradeRequest | null>(null);
   const [favoriteItemIds, setFavoriteItemIds] = useState<string[]>([]);
 
   const handleNavigate = (screen: Screen) => {
     setCurrentScreen(screen);
     setSelectedItem(null);
+    setSelectedTradeRequest(null);
   };
 
   const handleToggleFavorite = (itemId: string) => {
@@ -81,6 +85,8 @@ function App() {
             setCurrentScreen("home");
           }}
           onRequestTrade={(item) => {
+            if (item.ownerId === "current_user") return;
+
             setSelectedItem(item);
             setCurrentScreen("tradeRequest");
           }}
@@ -103,7 +109,22 @@ function App() {
       )}
 
       {currentScreen === "requestList" && (
-        <RequestListScreen />
+        <RequestListScreen
+          onOpenTrade={(request) => {
+            setSelectedTradeRequest(request);
+            setCurrentScreen("requestDetail");
+          }}
+        />
+      )}
+
+      {currentScreen === "requestDetail" && selectedTradeRequest && (
+        <TradeRoomScreen
+          request={selectedTradeRequest}
+          onBack={() => {
+            setSelectedTradeRequest(null);
+            setCurrentScreen("requestList");
+          }}
+        />
       )}
 
       {currentScreen === "myPage" && (
