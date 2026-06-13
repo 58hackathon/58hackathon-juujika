@@ -8,7 +8,7 @@
 .item-detail-screen__back {
     margin-bottom: 16px;
     border: 0;
-    background: transparent;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0), var(--color-primary-soft));
     color: var(--color-primary);
     font-weight: 800;
     cursor: pointer;
@@ -17,16 +17,19 @@
 .item-detail-screen__image {
     width: 100%;
     aspect-ratio: 1 / 0.72;
-    border-radius: 18px;
+    border-radius: var(--radius-card);
     object-fit: cover;
-    background: #f3f4f6;
+    background: linear-gradient(135deg, #eef3fb, #ffffff);
+    box-shadow: var(--shadow-soft);
 }
 
 .item-detail-screen__body {
     margin-top: 20px;
     padding: 20px;
-    border-radius: 18px;
-    background: #ffffff;
+    border: 1px solid rgba(223, 230, 240, 0.92);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--shadow-soft);
 }
 
 .item-detail-screen__category {
@@ -37,6 +40,7 @@
 .item-detail-screen__price {
     font-size: 24px;
     font-weight: 900;
+    color: var(--color-primary-dark);
 }
 
 .item-detail-screen__request-button {
@@ -44,11 +48,11 @@
     min-height: 52px;
     margin-top: 18px;
     border: 0;
-    border-radius: 8px;
-    background: var(--color-primary);
+    border-radius: var(--radius-control);
+    background: var(--gradient-primary);
     color: #ffffff;
     font-weight: 900;
-    box-shadow: 0 14px 28px rgba(7, 87, 255, 0.22);
+    box-shadow: 0 14px 28px rgba(36, 87, 255, 0.22);
     cursor: pointer;
 }
 
@@ -94,7 +98,7 @@
 .item-detail-screen__owner-panel {
     margin-top: 20px;
     padding-top: 18px;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid rgba(223, 230, 240, 0.92);
 }
 
 .item-detail-screen__owner-heading {
@@ -123,9 +127,9 @@
 
 .item-detail-screen__request {
     padding: 14px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: #f9fafb;
+    border: 1px solid rgba(223, 230, 240, 0.92);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-soft);
 }
 
 .item-detail-screen__request-top {
@@ -142,14 +146,14 @@
     min-height: 24px;
     padding: 2px 9px;
     border-radius: 999px;
-    background: #fff7ed;
-    color: #c2410c;
+    background: var(--color-warning-soft);
+    color: var(--color-warning);
     font-size: 12px;
     font-weight: 900;
 }
 
 .item-detail-screen__status--approved {
-    background: #ecfdf5;
+    background: var(--color-accent-soft);
     color: #047857;
 }
 
@@ -159,7 +163,7 @@
 }
 
 .item-detail-screen__status--completed {
-    background: #eef4ff;
+    background: var(--color-primary-soft);
     color: var(--color-primary);
 }
 
@@ -177,8 +181,8 @@
 
 .item-detail-screen__empty-requests {
     padding: 18px;
-    border: 1px dashed var(--color-border);
-    border-radius: 8px;
+    border: 1px dashed rgba(36, 87, 255, 0.24);
+    border-radius: var(--radius-control);
     background: #ffffff;
 }
 
