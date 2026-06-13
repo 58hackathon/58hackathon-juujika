@@ -2,8 +2,9 @@
   position: relative;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, rgba(7, 87, 255, 0.08), rgba(255, 255, 255, 0) 260px),
-    #f6f7fb;
+    radial-gradient(circle at 14% 8%, rgba(51, 214, 138, 0.14), transparent 28vw),
+    radial-gradient(circle at 88% 0%, rgba(36, 87, 255, 0.12), transparent 30vw),
+    linear-gradient(180deg, #fbfdff 0%, #f5f7fb 340px, #f7f9fc 100%);
 }
 
 .app-profile-button {
@@ -17,16 +18,21 @@
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: transparent;
-  box-shadow: 0 10px 24px rgba(31, 41, 55, 0.18);
+  background: var(--gradient-soft);
+  box-shadow: var(--shadow-soft);
   overflow: hidden;
   cursor: pointer;
 }
 
+.app-profile-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card);
+}
+
 .app-profile-button--active {
   box-shadow:
-    0 0 0 3px rgba(7, 87, 255, 0.22),
-    0 10px 24px rgba(31, 41, 55, 0.18);
+    0 0 0 3px rgba(36, 87, 255, 0.18),
+    var(--shadow-soft);
 }
 
 .app-profile-button__image {
@@ -71,7 +77,7 @@
   height: 40px;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--gradient-soft);
   color: var(--color-text);
   font-size: 20px;
   font-weight: 800;

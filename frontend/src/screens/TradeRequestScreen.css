@@ -16,13 +16,18 @@
     place-items: center;
     width: 40px;
     height: 40px;
-    border: 1px solid var(--color-border);
+    border: 1px solid rgba(223, 230, 240, 0.95);
     border-radius: 999px;
-    background: #ffffff;
+    background: var(--gradient-soft);
     color: var(--color-text);
     font-size: 20px;
     font-weight: 900;
     cursor: pointer;
+}
+
+.trade-request-screen__back:hover {
+    background: linear-gradient(135deg, #ffffff, var(--color-primary-soft));
+    color: var(--color-primary);
 }
 
 .trade-request-screen__title {
@@ -38,10 +43,10 @@
 }
 
 .trade-request-screen__panel {
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0 16px 36px rgba(31, 41, 55, 0.08);
+    border: 1px solid rgba(223, 230, 240, 0.92);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
 }
 
@@ -49,8 +54,8 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 0;
-    border-bottom: 1px solid var(--color-border);
-    background: #f9fafb;
+    border-bottom: 1px solid rgba(223, 230, 240, 0.92);
+    background: var(--color-surface-soft);
 }
 
 .trade-request-screen__step {
@@ -77,11 +82,11 @@
 
 .trade-request-screen__step--active {
     color: var(--color-primary);
-    background: #eef4ff;
+    background: var(--color-primary-soft);
 }
 
 .trade-request-screen__step--active .trade-request-screen__step-number {
-    background: var(--color-primary);
+    background: var(--gradient-primary);
     color: #ffffff;
 }
 
@@ -117,17 +122,18 @@
     grid-template-columns: 108px 1fr;
     gap: 14px;
     padding: 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: #ffffff;
+    border: 1px solid rgba(223, 230, 240, 0.92);
+    border-radius: var(--radius-control);
+    background: linear-gradient(180deg, #ffffff, #fbfcff);
+    box-shadow: 0 10px 22px rgba(35, 45, 72, 0.06);
 }
 
 .trade-request-screen__target img,
 .trade-request-screen__offer-image {
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 8px;
-    background: #f3f4f6;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #eef3fb, #ffffff);
     object-fit: cover;
 }
 
@@ -151,8 +157,8 @@
     margin-top: 12px;
     padding: 4px 10px;
     border-radius: 999px;
-    background: #f1f8dd;
-    color: #3f6212;
+    background: var(--color-accent-soft);
+    color: #047857;
     font-size: 12px;
     font-weight: 900;
 }
@@ -167,19 +173,21 @@
     min-width: 0;
     padding: 10px;
     border: 2px solid transparent;
-    border-radius: 8px;
-    background: #f9fafb;
+    border-radius: var(--radius-control);
+    background: var(--gradient-soft);
     text-align: left;
     cursor: pointer;
 }
 
 .trade-request-screen__offer-card:hover {
-    border-color: #c7d2fe;
+    border-color: rgba(36, 87, 255, 0.28);
+    transform: translateY(-1px);
 }
 
 .trade-request-screen__offer-card--selected {
     border-color: var(--color-primary);
-    background: #eef4ff;
+    background: linear-gradient(135deg, #ffffff, var(--color-primary-soft));
+    box-shadow: 0 10px 22px rgba(36, 87, 255, 0.12);
 }
 
 .trade-request-screen__offer-card h3 {
@@ -197,15 +205,15 @@
     min-height: 132px;
     resize: vertical;
     padding: 14px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border: 1px solid rgba(223, 230, 240, 0.95);
+    border-radius: var(--radius-control);
     outline: 0;
     line-height: 1.7;
 }
 
 .trade-request-screen__textarea:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(7, 87, 255, 0.12);
+    box-shadow: var(--shadow-focus);
 }
 
 .trade-request-screen__counter {
@@ -224,16 +232,16 @@
 .trade-request-screen__submit {
     min-height: 52px;
     border: 0;
-    border-radius: 8px;
-    background: linear-gradient(90deg, var(--color-primary), #16c784);
+    border-radius: var(--radius-control);
+    background: var(--gradient-primary);
     color: #ffffff;
     font-weight: 900;
-    box-shadow: 0 14px 28px rgba(7, 87, 255, 0.2);
+    box-shadow: 0 14px 28px rgba(36, 87, 255, 0.2);
     cursor: pointer;
 }
 
 .trade-request-screen__submit:disabled {
-    background: #d1d5db;
+    background: linear-gradient(135deg, #d1d5db, #e5e7eb);
     box-shadow: none;
     cursor: not-allowed;
 }
@@ -258,7 +266,7 @@
     height: 72px;
     margin: 0 auto 16px;
     border-radius: 999px;
-    background: var(--color-accent);
+    background: var(--gradient-accent);
     color: var(--color-text);
     font-size: 34px;
     font-weight: 900;
@@ -279,9 +287,9 @@
 .trade-request-screen__secondary {
     min-height: 48px;
     padding: 0 18px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: #ffffff;
+    border: 1px solid rgba(223, 230, 240, 0.95);
+    border-radius: var(--radius-control);
+    background: var(--gradient-soft);
     color: var(--color-text);
     font-weight: 900;
     cursor: pointer;
