@@ -3,16 +3,23 @@ import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import { getTradeRequests } from "../features/tradeRequests/tradeRequestApi";
 import type { TradeRequest } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./MyPageScreen.css";
 
 type MyPageScreenProps = {
+    currentUser: RegisteredUser;
     favoriteItemIds: string[];
     onBack: () => void;
+    onLogout: () => void;
 };
 
-const currentUserId = "current_user";
-
-function MyPageScreen({ favoriteItemIds, onBack }: MyPageScreenProps) {
+function MyPageScreen({
+    currentUser,
+    favoriteItemIds,
+    onBack,
+    onLogout,
+}: MyPageScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [tradeRequests, setTradeRequests] = useState<TradeRequest[]>([]);
 
@@ -30,10 +37,12 @@ function MyPageScreen({ favoriteItemIds, onBack }: MyPageScreenProps) {
         loadMyPageData();
     }, []);
 
-    const myItems = items.filter((item) => item.ownerId === currentUserId);
+    const myItems = items.filter((item) =>
+        isCurrentUserResource(item.ownerId, currentUser.id)
+    );
     const favoriteItems = items.filter((item) => favoriteItemIds.includes(item.id));
     const receivedRequests = tradeRequests.filter(
-        (request) => request.receiverId === currentUserId
+        (request) => isCurrentUserResource(request.receiverId, currentUser.id)
     );
     const visibleRequests =
         receivedRequests.length > 0 ? receivedRequests : tradeRequests.slice(0, 3);
@@ -53,10 +62,31 @@ function MyPageScreen({ favoriteItemIds, onBack }: MyPageScreenProps) {
                     />
                     <div>
                         <p className="my-page-screen__eyebrow">マイページ</p>
-                        <h1>you</h1>
+                        <h1>{currentUser.username}</h1>
                     </div>
                 </div>
             </header>
+
+            <section className="my-page-account">
+                <div>
+                    <p className="my-page-account__label">登録メール</p>
+                    <strong>{currentUser.email}</strong>
+                </div>
+                <div>
+                    <p className="my-page-account__label">プラン</p>
+                    <strong>{getPlanLabel(currentUser.plan)}</strong>
+                </div>
+                <div>
+                    <p className="my-page-account__label">配送先</p>
+                    <strong>
+                        {currentUser.shippingAddress.prefectureCity}
+                        {currentUser.shippingAddress.addressLine}
+                    </strong>
+                </div>
+                <button type="button" onClick={onLogout}>
+                    ログアウト
+                </button>
+            </section>
 
             <div className="my-page-screen__stats">
                 <div>
@@ -169,6 +199,16 @@ function getRequestStatusLabel(status: TradeRequest["status"]): string {
     };
 
     return labels[status];
+}
+
+function getPlanLabel(plan: RegisteredUser["plan"]): string {
+    const labels = {
+        free: "Free",
+        lite: "Lite",
+        plus: "Plus",
+    };
+
+    return labels[plan];
 }
 
 export default MyPageScreen;

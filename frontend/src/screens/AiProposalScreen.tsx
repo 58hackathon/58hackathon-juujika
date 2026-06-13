@@ -3,11 +3,15 @@ import { getAiTradeRoutes } from "../features/aiProposals/aiProposalApi";
 import type { AiTradeRoute } from "../features/aiProposals/aiProposalTypes";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./AiProposalScreen.css";
 
-const currentUserId = "current_user";
+type AiProposalScreenProps = {
+    currentUser: RegisteredUser;
+};
 
-function AiProposalScreen() {
+function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [sourceItemId, setSourceItemId] = useState("");
     const [goalItemId, setGoalItemId] = useState("");
@@ -21,7 +25,9 @@ function AiProposalScreen() {
             setItems(itemsFromApi);
 
             const firstMyItem =
-                itemsFromApi.find((item) => item.ownerId === currentUserId) ??
+                itemsFromApi.find((item) =>
+                    isCurrentUserResource(item.ownerId, currentUser.id)
+                ) ??
                 itemsFromApi[0];
             const firstGoalItem = itemsFromApi.find(
                 (item) => item.id !== firstMyItem?.id
@@ -32,12 +38,14 @@ function AiProposalScreen() {
         };
 
         loadItems();
-    }, []);
+    }, [currentUser.id]);
 
     const sourceItems = useMemo(() => {
-        const myItems = items.filter((item) => item.ownerId === currentUserId);
+        const myItems = items.filter((item) =>
+            isCurrentUserResource(item.ownerId, currentUser.id)
+        );
         return myItems.length > 0 ? myItems : items.slice(0, 4);
-    }, [items]);
+    }, [currentUser.id, items]);
 
     const goalItems = items.filter((item) => item.id !== sourceItemId);
     const sourceItem = items.find((item) => item.id === sourceItemId);

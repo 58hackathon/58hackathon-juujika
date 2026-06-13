@@ -52,6 +52,45 @@ Request:
 }
 ```
 
+## Users
+
+### GET /users
+
+登録ユーザー一覧を取得する。
+
+### GET /users/:id
+
+登録ユーザー詳細を取得する。
+
+### POST /users
+
+ユーザー登録を行う。
+
+Request:
+
+```json
+{
+  "username": "haru_03",
+  "email": "haru@example.com",
+  "password": "password123",
+  "plan": "lite",
+  "shippingAddress": {
+    "postalCode": "150-0001",
+    "prefectureCity": "東京都渋谷区",
+    "addressLine": "神宮前1-2-3",
+    "building": "はるビル101"
+  }
+}
+```
+
+Plan:
+
+```txt
+free
+lite
+plus
+```
+
 ## Trade Requests
 
 ### GET /trade-requests

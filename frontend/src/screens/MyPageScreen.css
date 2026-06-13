@@ -63,6 +63,50 @@
     margin-bottom: 22px;
 }
 
+.my-page-account {
+    display: grid;
+    grid-template-columns: 1fr 0.62fr 1.2fr auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.84);
+}
+
+.my-page-account div {
+    min-width: 0;
+}
+
+.my-page-account__label {
+    margin: 0 0 4px;
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.my-page-account strong {
+    display: block;
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.my-page-account button {
+    min-width: 92px;
+    height: 38px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--color-text);
+    font-weight: 900;
+    cursor: pointer;
+}
+
 .my-page-screen__stats div {
     padding: 14px 10px;
     border: 1px solid var(--color-border);
@@ -235,5 +279,15 @@
 
     .my-page-screen__profile {
         padding-left: 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .my-page-account {
+        grid-template-columns: 1fr;
+    }
+
+    .my-page-account button {
+        width: 100%;
     }
 }

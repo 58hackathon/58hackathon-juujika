@@ -5,10 +5,13 @@ import type {
     TradeRequest,
     TradeRequestStatus,
 } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./ItemDetailScreen.css";
 
 type ItemDetailScreenProps = {
     item: Item;
+    currentUser: RegisteredUser;
     onBack: () => void;
     onRequestTrade: (item: Item) => void;
 };
@@ -20,9 +23,14 @@ const statusLabels: Record<TradeRequestStatus, string> = {
     completed: "交換成立",
 };
 
-function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProps) {
+function ItemDetailScreen({
+    item,
+    currentUser,
+    onBack,
+    onRequestTrade,
+}: ItemDetailScreenProps) {
     const [receivedRequests, setReceivedRequests] = useState<TradeRequest[]>([]);
-    const isOwnItem = item.ownerId === "current_user";
+    const isOwnItem = isCurrentUserResource(item.ownerId, currentUser.id);
 
     useEffect(() => {
         if (!isOwnItem) {
@@ -36,13 +44,13 @@ function ItemDetailScreen({ item, onBack, onRequestTrade }: ItemDetailScreenProp
                 requests.filter(
                     (request) =>
                         request.targetItemId === item.id &&
-                        request.receiverId === "current_user"
+                        isCurrentUserResource(request.receiverId, currentUser.id)
                 )
             );
         };
 
         loadReceivedRequests();
-    }, [isOwnItem, item.id]);
+    }, [currentUser.id, isOwnItem, item.id]);
 
     return (
         <section className="item-detail-screen">

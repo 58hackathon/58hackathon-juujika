@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { createItem } from "../features/items/itemApi";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./CreateItemScreen.css";
 
 type CreateItemScreenProps = {
+    currentUser: RegisteredUser;
     onItemCreated: () => void;
 };
 
-function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
+function CreateItemScreen({ currentUser, onItemCreated }: CreateItemScreenProps) {
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [itemName, setItemName] = useState("");
     const [category, setCategory] = useState("");
@@ -111,6 +113,8 @@ function CreateItemScreen({ onItemCreated }: CreateItemScreenProps) {
         await createItem({
             title: String(formData.get("itemName") ?? ""),
             category: String(formData.get("category") ?? ""),
+            ownerId: currentUser.id,
+            ownerName: currentUser.username,
             price: priceNumber,
             description: String(formData.get("comment") ?? ""),
             wantedItem: selectedWantedItems.join("、"),
