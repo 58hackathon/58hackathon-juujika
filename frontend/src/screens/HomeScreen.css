@@ -150,7 +150,7 @@
 }
 
 .home-screen__listing-filter-button:hover {
-    background: #f1f5f3;
+    background: var(--color-primary);
 }
 
 .home-screen__listing-filter-button--active {

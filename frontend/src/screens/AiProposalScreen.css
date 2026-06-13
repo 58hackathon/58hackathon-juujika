@@ -398,6 +398,15 @@
     overflow-wrap: anywhere;
 }
 
+.ai-route-step__price {
+    display: block;
+    margin-top: 4px;
+    color: var(--color-primary);
+    font-size: 13px;
+    font-weight: 950;
+    line-height: 1.2;
+}
+
 .ai-route-step p {
     margin: 4px 0 0;
     color: var(--color-muted);
