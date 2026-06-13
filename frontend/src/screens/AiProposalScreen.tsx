@@ -75,16 +75,10 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     return (
         <section className="ai-proposal-screen">
             <header className="ai-proposal-screen__header">
-                <div className="ai-proposal-screen__marks" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <span />
-                </div>
                 <p className="ai-proposal-screen__eyebrow">交換提案AI</p>
-                <h1>AI提案候補</h1>
+                <h1>AI提案</h1>
                 <p>
-                    1つに決め打ちせず、ユーザーが納得してルートを選べるようにします。
+                    出品した商品から、欲しい商品へ近づく交換ルートを探します。
                 </p>
             </header>
 
@@ -134,8 +128,8 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
 
             {routes.length === 0 ? (
                 <section className="ai-proposal-empty">
-                    <h2>出品商品と目標商品を選んでください</h2>
-                    <p>後からバックエンドの `/api/ai/trade-routes` に差し替えられる構造です。</p>
+                    <h2>商品を選んで候補を出しましょう</h2>
+                    <p>価格差や相手の希望を見ながら、成立しやすいルートを提案します。</p>
                 </section>
             ) : (
                 <>
