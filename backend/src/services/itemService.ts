@@ -12,6 +12,7 @@ const items: Item[] = [
     status: "available",
     imageUrl: "/images/demo/air-force-1.png",
     likes: 72,
+    price: 25000,
     createdAt: "2026-06-08T10:00:00.000Z",
   },
   {
@@ -25,6 +26,7 @@ const items: Item[] = [
     status: "available",
     imageUrl: "/images/demo/new-era-cap.png",
     likes: 31,
+    price: 1400,
     createdAt: "2026-06-08T11:00:00.000Z",
   },
 ];
@@ -49,6 +51,7 @@ export function createItem(input: CreateItemInput): Item {
     status: "available",
     imageUrl: input.imageUrl ?? "",
     likes: 0,
+    price: input.price,
     createdAt: new Date().toISOString(),
   };
 

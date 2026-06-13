@@ -1,9 +1,49 @@
 .app-shell {
+  position: relative;
   min-height: 100vh;
   background:
     linear-gradient(180deg, rgba(7, 87, 255, 0.08), rgba(255, 255, 255, 0) 260px),
     #f6f7fb;
 }
+
+.app-profile-button {
+  position: absolute;
+  top: 32px;
+  right: clamp(16px, 5vw, 64px);
+  z-index: 20;
+  display: block;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: 0 10px 24px rgba(31, 41, 55, 0.18);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.app-profile-button--active {
+  box-shadow:
+    0 0 0 3px rgba(7, 87, 255, 0.22),
+    0 10px 24px rgba(31, 41, 55, 0.18);
+}
+
+.app-profile-button__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.5);
+}
+
+@media (max-width: 720px) {
+  .app-profile-button {
+    top: 14px;
+    right: 14px;
+  }
+}
+
 .placeholder-screen {
   width: min(100%, 720px);
   margin: 0 auto;

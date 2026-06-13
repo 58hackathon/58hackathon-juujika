@@ -38,7 +38,24 @@ function App() {
 
   return (
     <main className="app-shell" data-current-screen={currentScreen}>
-      {currentScreen !== "itemDetail" && currentScreen !== "tradeRequest" && (
+      <button
+        aria-label="マイページ"
+        className={
+          currentScreen === "myPage"
+            ? "app-profile-button app-profile-button--active"
+            : "app-profile-button"
+        }
+        onClick={() => handleNavigate("myPage")}
+        type="button"
+      >
+        <img
+          className="app-profile-button__image"
+          src="/images/demo/e10821c74b533d465ba888ea66daa30f.jpg"
+          alt=""
+        />
+      </button>
+
+      {currentScreen !== "itemDetail" && (
         <AppNav
         currentScreen={currentScreen}
         onNavigate={handleNavigate}
@@ -55,7 +72,6 @@ function App() {
             setSelectedItem(item);
             setCurrentScreen("itemDetail");
           }}
-          onOpenMyPage={() => setCurrentScreen("myPage")}
           favoriteItemIds={favoriteItemIds}
           onToggleFavorite={handleToggleFavorite}
         />
