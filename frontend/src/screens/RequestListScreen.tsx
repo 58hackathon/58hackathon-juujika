@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ConfirmationNotice from "../components/ConfirmationNotice";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import {
@@ -9,11 +10,14 @@ import type {
     TradeRequest,
     TradeRequestStatus,
 } from "../features/tradeRequests/tradeRequestTypes";
+import { isCurrentUserResource } from "../features/users/currentUser";
+import type { RegisteredUser } from "../features/users/userTypes";
 import "./RequestListScreen.css";
 
 type RequestTab = "sent" | "received";
 
 type RequestListScreenProps = {
+    currentUser: RegisteredUser;
     onOpenTrade: (request: TradeRequest) => void;
 };
 
@@ -24,10 +28,11 @@ const statusLabels: Record<TradeRequestStatus, string> = {
     completed: "交換成立",
 };
 
-function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
+function RequestListScreen({ currentUser, onOpenTrade }: RequestListScreenProps) {
     const [activeTab, setActiveTab] = useState<RequestTab>("sent");
     const [requests, setRequests] = useState<TradeRequest[]>([]);
     const [items, setItems] = useState<Item[]>([]);
+    const [approvalRequest, setApprovalRequest] = useState<TradeRequest | null>(null);
 
     useEffect(() => {
         const loadRequests = async () => {
@@ -47,15 +52,15 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
         () =>
             requests.filter((request) =>
                 activeTab === "sent"
-                    ? request.requesterId === "current_user"
-                    : request.receiverId === "current_user"
+                    ? isCurrentUserResource(request.requesterId, currentUser.id)
+                    : isCurrentUserResource(request.receiverId, currentUser.id)
             ),
-        [activeTab, requests]
+        [activeTab, currentUser.id, requests]
     );
 
     const findItem = (itemId: string) => items.find((item) => item.id === itemId);
     const receivedCount = requests.filter(
-        (request) => request.receiverId === "current_user"
+        (request) => isCurrentUserResource(request.receiverId, currentUser.id)
     ).length;
 
     const handleUpdateStatus = async (
@@ -75,6 +80,14 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
         if (options?.openDetail) {
             onOpenTrade(updatedRequest);
         }
+    };
+
+    const handleConfirmApproval = async () => {
+        if (!approvalRequest) return;
+
+        const requestId = approvalRequest.id;
+        setApprovalRequest(null);
+        await handleUpdateStatus(requestId, "approved");
     };
 
     return (
@@ -171,7 +184,7 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
                                         <>
                                             <button
                                                 className="request-list-screen__button request-list-screen__button--primary"
-                                                onClick={() => handleUpdateStatus(request.id, "approved")}
+                                                onClick={() => setApprovalRequest(request)}
                                                 type="button"
                                             >
                                                 承認
@@ -222,6 +235,27 @@ function RequestListScreen({ onOpenTrade }: RequestListScreenProps) {
                     <p>気になる商品から交換申請を送ってみましょう。</p>
                 </div>
             )}
+
+            <ConfirmationNotice
+                cancelLabel="まだ承認しない"
+                confirmLabel="申請を承認する"
+                description="承認すると相手と取引を進められる状態になります。提示された商品とメッセージを確認したうえで受け入れてください。"
+                details={
+                    approvalRequest
+                        ? [
+                            { label: "申請者", value: `@${approvalRequest.requesterName}` },
+                            { label: "相手の商品", value: approvalRequest.offeredItemTitle },
+                            { label: "あなたの商品", value: approvalRequest.targetItemTitle },
+                        ]
+                        : []
+                }
+                isOpen={approvalRequest !== null}
+                onCancel={() => setApprovalRequest(null)}
+                onConfirm={() => {
+                    void handleConfirmApproval();
+                }}
+                title="この交換申請を承認しますか？"
+            />
         </section>
     );
 }

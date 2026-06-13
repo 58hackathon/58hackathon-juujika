@@ -10,6 +10,7 @@ const navItems: { screen: Screen; label: string }[] = [
     { screen: "home", label: "商品一覧" },
     { screen: "createItem", label: "出品" },
     { screen: "requestList", label: "リクエスト" },
+    { screen: "gacha", label: "ガチャ" },
     { screen: "aiProposal", label: "AI提案"},
 ];
 

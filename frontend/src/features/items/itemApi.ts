@@ -1,8 +1,9 @@
-import type { Item } from "./itemTypes";
+import type { Item, ItemGachaInput, ItemGachaResult } from "./itemTypes";
 import { demoItems } from "./itemData";
 
-type ApiItem = Omit<Item, "price"> & {
+type ApiItem = Omit<Item, "price" | "listingType"> & {
   price?: number;
+  listingType?: Item["listingType"];
 };
 
 type ItemResponse = {
@@ -13,12 +14,21 @@ type ItemsResponse = {
   data: ApiItem[];
 };
 
+type GachaResponse = {
+  data: {
+    item: ApiItem;
+    reason: string;
+    poolSize: number;
+  };
+};
+
 let fallbackItems: Item[] = [...demoItems];
 
 function toItem(apiItem: ApiItem): Item {
   return {
     ...apiItem,
     price: apiItem.price ?? 0,
+    listingType: apiItem.listingType ?? "direct",
   };
 }
 
@@ -66,9 +76,39 @@ export async function getItemById(id: string): Promise<Item | undefined> {
   }
 }
 
+export async function getGachaItem(
+  input: ItemGachaInput = {}
+): Promise<ItemGachaResult | undefined> {
+  try {
+    const endpoint = new URL("/api/items/gacha", window.location.origin);
+
+    Object.entries(input).forEach(([key, value]) => {
+      if (value === undefined || value === "") return;
+      endpoint.searchParams.set(key, String(value));
+    });
+
+    const response = await fetch(`${endpoint.pathname}${endpoint.search}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch gacha item");
+    }
+
+    const json: GachaResponse = await response.json();
+    return {
+      ...json.data,
+      item: toItem(json.data.item),
+    };
+  } catch (error) {
+    console.warn("APIからガチャ候補を取得できないためデモ商品から選びます", error);
+    return getFallbackGachaItem(input);
+  }
+}
+
 export async function createItem(input: {
   title: string;
   description: string;
+  ownerId: string;
+  ownerName: string;
   wantedItem: string;
   category: string;
   price: number;
@@ -82,8 +122,6 @@ export async function createItem(input: {
       },
       body: JSON.stringify({
         ...input,
-        ownerId: "current_user",
-        ownerName: "you",
       }),
     });
 
@@ -100,18 +138,76 @@ export async function createItem(input: {
       id: `demo_${Date.now()}`,
       title: input.title,
       description: input.description,
-      ownerId: "current_user",
-      ownerName: "you",
+      ownerId: input.ownerId,
+      ownerName: input.ownerName,
       wantedItem: input.wantedItem,
       category: input.category,
       status: "available",
       imageUrl: input.imageUrl ?? "/images/demo/generated/reading-card-500.png",
       likes: 0,
       price: input.price,
+      listingType: "direct",
       createdAt: new Date().toISOString(),
     };
 
     fallbackItems = [fallbackItem, ...fallbackItems];
     return fallbackItem;
   }
+}
+
+function getFallbackGachaItem(input: ItemGachaInput): ItemGachaResult | undefined {
+  const candidates = fallbackItems.filter((item) => matchesGachaInput(item, input));
+
+  if (candidates.length === 0) {
+    return undefined;
+  }
+
+  const item = candidates[Math.floor(Math.random() * candidates.length)];
+
+  return {
+    item,
+    reason: buildFallbackGachaReason(item, input),
+    poolSize: candidates.length,
+  };
+}
+
+function matchesGachaInput(item: Item, input: ItemGachaInput): boolean {
+  return (
+    item.status === "available" &&
+    item.id !== input.excludeItemId &&
+    item.id !== input.sourceItemId &&
+    item.ownerId !== input.userId &&
+    item.ownerId !== "current_user" &&
+    item.listingType === "warehouse" &&
+    item.warehouseUseCase === "gacha" &&
+    matchesOptionalText(item.category, input.category) &&
+    matchesOptionalMin(item.price, input.minPrice) &&
+    matchesOptionalMax(item.price, input.maxPrice)
+  );
+}
+
+function matchesOptionalText(value: string, expected: string | undefined): boolean {
+  return expected === undefined || value === expected;
+}
+
+function matchesOptionalMin(value: number, min: number | undefined): boolean {
+  return min === undefined || value >= min;
+}
+
+function matchesOptionalMax(value: number, max: number | undefined): boolean {
+  return max === undefined || value <= max;
+}
+
+function buildFallbackGachaReason(item: Item, input: ItemGachaInput): string {
+  const reasons = ["ガチャ対象の倉庫商品からランダムに選ばれました"];
+
+  if (input.category && item.category === input.category) {
+    reasons.push(`カテゴリ一致: ${item.category}`);
+  }
+
+  if (input.minPrice !== undefined || input.maxPrice !== undefined) {
+    reasons.push(`価格: ¥${item.price.toLocaleString()}`);
+  }
+
+  return reasons.join(" / ");
 }

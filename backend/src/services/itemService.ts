@@ -1,4 +1,9 @@
-import type { CreateItemInput, Item } from "../models/item.js";
+import type {
+  CreateItemInput,
+  Item,
+  ItemGachaInput,
+  ItemGachaResult,
+} from "../models/item.js";
 
 const itemsCollectionName = "items";
 const firestoreDatabaseId = "(default)";
@@ -51,6 +56,8 @@ const fallbackItems: Item[] = [
     imageUrls: ["/images/demo/air-force-1.png"],
     likes: 72,
     price: 25000,
+    listingType: "direct",
+    warehouseUseCases: [],
     createdAt: "2026-06-08T10:00:00.000Z",
   },
   {
@@ -68,6 +75,8 @@ const fallbackItems: Item[] = [
     imageUrls: ["/images/demo/new-era-cap.png"],
     likes: 31,
     price: 1400,
+    listingType: "direct",
+    warehouseUseCases: [],
     createdAt: "2026-06-08T11:00:00.000Z",
   },
 ];
@@ -124,6 +133,26 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   return toItem(document);
 }
 
+export async function getGachaItem(
+  input: ItemGachaInput = {}
+): Promise<ItemGachaResult | undefined> {
+  const candidates = (await getItems()).filter((item) =>
+    matchesGachaInput(item, input)
+  );
+
+  if (candidates.length === 0) {
+    return undefined;
+  }
+
+  const item = candidates[Math.floor(Math.random() * candidates.length)];
+
+  return {
+    item,
+    reason: buildGachaReason(item, input),
+    poolSize: candidates.length,
+  };
+}
+
 function toNewItem(input: CreateItemInput): Item {
   const wantedItems = normalizeStringArray(input.wantedItems, input.wantedItem);
   const imageUrls = normalizeStringArray(input.imageUrls, input.imageUrl);
@@ -143,8 +172,48 @@ function toNewItem(input: CreateItemInput): Item {
     imageUrls,
     likes: 0,
     price: input.price,
+    listingType: input.listingType ?? "direct",
+    warehouseUseCases: input.warehouseUseCases ?? [],
     createdAt: new Date().toISOString(),
   };
+}
+
+function matchesGachaInput(item: Item, input: ItemGachaInput): boolean {
+  return (
+    item.status === "available" &&
+    item.id !== input.excludeItemId &&
+    item.id !== input.sourceItemId &&
+    item.ownerId !== input.userId &&
+    matchesOptionalText(item.category, input.category) &&
+    matchesOptionalMin(item.price, input.minPrice) &&
+    matchesOptionalMax(item.price, input.maxPrice)
+  );
+}
+
+function matchesOptionalText(value: string, expected: string | undefined): boolean {
+  return expected === undefined || value === expected;
+}
+
+function matchesOptionalMin(value: number, min: number | undefined): boolean {
+  return min === undefined || value >= min;
+}
+
+function matchesOptionalMax(value: number, max: number | undefined): boolean {
+  return max === undefined || value <= max;
+}
+
+function buildGachaReason(item: Item, input: ItemGachaInput): string {
+  const reasons = ["Randomly selected from available items"];
+
+  if (input.category && item.category === input.category) {
+    reasons.push(`category matched: ${item.category}`);
+  }
+
+  if (input.minPrice !== undefined || input.maxPrice !== undefined) {
+    reasons.push(`price: ${item.price}`);
+  }
+
+  return reasons.join("; ");
 }
 
 async function requestFirestore<T>(
@@ -218,6 +287,8 @@ function toFirestoreDocument(item: Item): FirestoreDocument {
       imageUrls: toFirestoreStringArray(item.imageUrls),
       likes: { integerValue: item.likes },
       price: { integerValue: item.price },
+      listingType: { stringValue: item.listingType },
+      warehouseUseCases: toFirestoreStringArray(item.warehouseUseCases),
       createdAt: { timestampValue: item.createdAt },
     },
   };
@@ -245,6 +316,8 @@ function toItem(document: FirestoreDocument): Item {
     imageUrls: imageUrls.length > 0 ? imageUrls : normalizeStringArray(undefined, imageUrl),
     likes: getIntegerValue(fields.likes),
     price: getIntegerValue(fields.price),
+    listingType: getItemListingType(fields.listingType),
+    warehouseUseCases: getWarehouseUseCases(fields.warehouseUseCases),
     createdAt: getTimestampValue(fields.createdAt),
   };
 }
@@ -301,6 +374,21 @@ function getItemStatus(value: FirestoreValue | undefined): Item["status"] {
   return status === "trading" || status === "completed"
     ? status
     : "available";
+}
+
+function getItemListingType(
+  value: FirestoreValue | undefined
+): Item["listingType"] {
+  return getStringValue(value) === "warehouse" ? "warehouse" : "direct";
+}
+
+function getWarehouseUseCases(
+  value: FirestoreValue | undefined
+): Item["warehouseUseCases"] {
+  return getStringArrayValue(value).filter(
+    (useCase): useCase is Item["warehouseUseCases"][number] =>
+      useCase === "ai_route" || useCase === "gacha"
+  );
 }
 
 function getIntegerValue(value: FirestoreValue | undefined): number {

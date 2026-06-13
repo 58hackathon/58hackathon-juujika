@@ -12,14 +12,14 @@ export async function createTradeRequest(input: {
   targetItemTitle: string;
   offeredItemId: string;
   offeredItemTitle: string;
+  requesterId: string;
+  requesterName: string;
   receiverId: string;
   receiverName: string;
   message: string;
 }): Promise<TradeRequest> {
   const tradeRequest: TradeRequest = {
     id: `request_${Date.now()}`,
-    requesterId: "current_user",
-    requesterName: "you",
     status: "pending",
     createdAt: new Date().toISOString(),
     ...input,

@@ -1,28 +1,7 @@
-.item-card__status {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.item-card__status--available {
-    background: var(--color-accent-soft);
-    color: #047857;
-}
-
-.item-card__status--trading {
-    background: var(--color-warning-soft);
-    color: var(--color-warning);
-}
-
-.item-card__status--completed {
-    background: #f3f4f6;
-    color: #4b5563;
-}
-
 .item-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     overflow: hidden;
     border: 1px solid rgba(223, 230, 240, 0.92);
     border-radius: var(--radius-card);
@@ -136,7 +115,10 @@
 }
 
 .item-card__body {
-    padding: 16px;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 15px 15px 17px;
 }
 
 .item-card__meta {
@@ -228,17 +210,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-.item-card__price {
-    font-size: 16px;
-    font-weight: 700;
-
-}
-
-.item-card__bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    margin-top: auto;
 }
 
 .item-card__price {

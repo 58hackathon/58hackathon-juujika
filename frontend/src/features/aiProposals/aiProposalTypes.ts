@@ -20,4 +20,5 @@ export type AiTradeRouteRequest = {
   sourceItemId: string;
   goalItemId: string;
   items: Item[];
+  limit?: number;
 };

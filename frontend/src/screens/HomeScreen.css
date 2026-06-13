@@ -91,7 +91,7 @@
 .home-screen__categories {
     display: flex;
     gap: 10px;
-    margin-bottom: 26px;
+    margin-bottom: 14px;
     overflow-x: auto;
     padding: 2px 0 6px;
 }
@@ -123,10 +123,47 @@
     box-shadow: 0 12px 22px rgba(36, 87, 255, 0.18);
 }
 
+.home-screen__listing-filter {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 24px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.home-screen__listing-filter-button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+
+.home-screen__listing-filter-button:hover {
+    background: #f1f5f3;
+}
+
+.home-screen__listing-filter-button--active {
+    background: var(--color-primary);
+    color: #ffffff;
+    box-shadow: 0 12px 22px rgba(36, 87, 255, 0.18);
+}
+
 .home-screen__section-title {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 14px;
     margin-bottom: 14px;
 }
 
@@ -135,10 +172,26 @@
     font-size: 21px;
 }
 
-.home-screen__section-title span {
+.home-screen__section-title p {
+    max-width: 560px;
+    margin: 5px 0 0;
     color: var(--color-muted);
     font-size: 13px;
     font-weight: 700;
+    line-height: 1.6;
+}
+
+.home-screen__section-title span {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 900;
 }
 
 .home-screen__grid {
@@ -193,5 +246,13 @@
 
     .home-screen__grid {
         grid-template-columns: 1fr;
+    }
+
+    .home-screen__section-title {
+        display: grid;
+    }
+
+    .home-screen__section-title span {
+        justify-self: start;
     }
 }

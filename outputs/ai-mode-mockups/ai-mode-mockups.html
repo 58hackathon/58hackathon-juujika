@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI交換モード UI Mockups</title>
+  <style>
+    :root {
+      --color-primary: #2457ff;
+      --color-primary-dark: #1237b8;
+      --color-primary-soft: #edf3ff;
+      --color-accent: #33d68a;
+      --color-accent-soft: #e9fbf2;
+      --color-text: #111827;
+      --color-muted: #6b7280;
+      --color-border: #dfe6f0;
+      --color-surface: #ffffff;
+      --color-surface-soft: #f8fafc;
+      --color-warning-soft: #fff5e8;
+      --color-warning: #c65d10;
+      --gradient-soft: linear-gradient(135deg, #ffffff 0%, #f4f7ff 52%, #eef6ff 100%);
+      --gradient-ai: linear-gradient(135deg, #1dbf9f 0%, #168875 56%, #0f5f56 100%);
+      --shadow-soft: 0 10px 28px rgba(35, 45, 72, 0.08);
+      --shadow-card: 0 18px 44px rgba(35, 45, 72, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--color-text);
+      background:
+        radial-gradient(circle at 14% 8%, rgba(51, 214, 138, 0.14), transparent 28vw),
+        radial-gradient(circle at 88% 0%, rgba(36, 87, 255, 0.12), transparent 30vw),
+        linear-gradient(180deg, #fbfdff 0%, #f5f7fb 340px, #f7f9fc 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-frame {
+      min-height: 100vh;
+      padding: 32px clamp(16px, 5vw, 64px) 56px;
+      position: relative;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 32px;
+      right: calc(clamp(16px, 5vw, 64px) + 52px);
+      display: grid;
+      grid-auto-flow: column;
+      gap: 6px;
+      padding: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .top-nav span {
+      display: grid;
+      place-items: center;
+      min-width: 112px;
+      height: 36px;
+      border-radius: 8px;
+      color: var(--color-text);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .top-nav .active {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .profile-dot {
+      position: absolute;
+      top: 32px;
+      right: clamp(16px, 5vw, 64px);
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background:
+        linear-gradient(135deg, rgba(36, 87, 255, 0.2), rgba(51, 214, 138, 0.24)),
+        url("../../frontend/public/images/demo/e10821c74b533d465ba888ea66daa30f.jpg") center / cover;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .screen {
+      width: min(100%, 1080px);
+      margin: 0 auto;
+      padding-top: 10px;
+    }
+
+    .screen-header {
+      margin-bottom: 18px;
+      max-width: 680px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--color-primary);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .lead {
+      max-width: 560px;
+      margin: 10px 0 0;
+      color: var(--color-muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      width: min(100%, 520px);
+      margin-bottom: 18px;
+      padding: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .mode-tabs span {
+      display: grid;
+      place-items: center;
+      height: 40px;
+      border-radius: 8px;
+      color: #374151;
+      font-weight: 900;
+    }
+
+    .mode-tabs .active {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 18px;
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--color-text);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .select-like,
+    .input-like {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: #ffffff;
+      color: var(--color-text);
+      font-weight: 800;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .primary-button,
+    .secondary-button,
+    .ghost-button {
+      display: grid;
+      place-items: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .primary-button {
+      border: 0;
+      background: var(--color-primary);
+      color: #ffffff;
+      box-shadow: 0 14px 28px rgba(7, 87, 255, 0.18);
+    }
+
+    .secondary-button {
+      border: 1px solid var(--color-border);
+      background: #ffffff;
+      color: var(--color-text);
+    }
+
+    .ghost-button {
+      border: 0;
+      background: #eef4ff;
+      color: var(--color-primary);
+    }
+
+    .guided-grid {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .source-card,
+    .proposal-panel,
+    .route-detail,
+    .auto-card,
+    .monitor-card,
+    .log-card {
+      border: 1px solid var(--color-border);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .source-card {
+      padding: 12px;
+    }
+
+    .source-card p,
+    .tiny-label {
+      margin: 0 0 10px;
+      color: var(--color-muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .product-image {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 14px;
+      object-fit: cover;
+      background: #f3f4f6;
+      display: block;
+    }
+
+    .source-card h2,
+    .proposal-copy h2,
+    .monitor-main h2 {
+      margin: 12px 0 6px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .muted {
+      color: var(--color-muted);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .proposal-panel {
+      padding: 16px;
+    }
+
+    .proposal-top {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr) 92px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .score-ring {
+      display: grid;
+      place-items: center;
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, #ffffff 0 54%, transparent 55%),
+        conic-gradient(var(--color-primary) 0 78%, #e5e7eb 78% 100%);
+      color: var(--color-primary);
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .pill.ai {
+      background: var(--color-accent-soft);
+      color: #047857;
+    }
+
+    .reason-box,
+    .message-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: var(--color-surface-soft);
+    }
+
+    .reason-box h3,
+    .message-box h3,
+    .route-detail h3,
+    .auto-card h3,
+    .monitor-card h3,
+    .log-card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .reason-box p,
+    .message-box p {
+      margin: 0;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.65;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .route-detail {
+      padding: 18px;
+    }
+
+    .route-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .route-title h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .route-flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .route-step {
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      background: #ffffff;
+      min-height: 106px;
+    }
+
+    .step-num {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: var(--color-primary);
+      font-weight: 950;
+      font-size: 13px;
+    }
+
+    .route-step strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .auto-layout {
+      display: grid;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .auto-card,
+    .monitor-card,
+    .log-card {
+      padding: 16px;
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin-left: 8px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--color-warning-soft);
+      color: var(--color-warning);
+      font-size: 12px;
+      font-weight: 950;
+      vertical-align: middle;
+    }
+
+    .setting-list {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0 0;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .setting-item span {
+      color: var(--color-muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .monitor-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .status-band {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--gradient-ai);
+      color: #ffffff;
+    }
+
+    .status-band p {
+      margin: 0 0 4px;
+      opacity: 0.86;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status-band strong {
+      font-size: 21px;
+    }
+
+    .status-band .primary-button {
+      min-height: 40px;
+      background: #ffffff;
+      color: #0f5f56;
+      box-shadow: none;
+    }
+
+    .progress-lane {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .progress-step {
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: #ffffff;
+      color: var(--color-muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .progress-step.active {
+      border-color: #168875;
+      background: var(--color-accent-soft);
+      color: #047857;
+    }
+
+    .monitor-main {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr) 96px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .monitor-main .score-ring {
+      width: 86px;
+      height: 86px;
+      background:
+        radial-gradient(circle, #ffffff 0 54%, transparent 55%),
+        conic-gradient(#168875 0 64%, #e5e7eb 64% 100%);
+      color: #168875;
+      font-size: 20px;
+    }
+
+    .log-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .log-list li {
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+      border-top: 1px solid var(--color-border);
+      color: #374151;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .log-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .log-list time {
+      color: var(--color-muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 720px) {
+      .app-frame {
+        padding: 24px 14px 86px;
+      }
+
+      .top-nav {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        padding: 8px 10px 10px;
+        border-radius: 0;
+        border-right: 0;
+        border-left: 0;
+      }
+
+      .top-nav span {
+        min-width: 0;
+        height: 44px;
+        font-size: 12px;
+      }
+
+      .top-nav .active {
+        background: #eef4ff;
+        color: var(--color-primary);
+      }
+
+      .profile-dot {
+        top: 14px;
+        right: 14px;
+      }
+
+      .screen {
+        padding-top: 0;
+      }
+
+      .screen-header {
+        padding-right: 52px;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+
+      .mode-tabs,
+      .controls,
+      .guided-grid,
+      .proposal-top,
+      .auto-layout,
+      .monitor-main {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        border-radius: 18px;
+      }
+
+      .guided-grid {
+        gap: 12px;
+      }
+
+      .source-card {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+
+      .source-card p {
+        grid-column: 1 / -1;
+        margin-bottom: 0;
+      }
+
+      .source-card .product-image {
+        border-radius: 12px;
+      }
+
+      .proposal-top .product-image {
+        width: 118px;
+      }
+
+      .score-ring {
+        width: 86px;
+        height: 86px;
+        justify-self: start;
+      }
+
+      .action-row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .route-flow,
+      .progress-lane {
+        grid-template-columns: 1fr;
+      }
+
+      .monitor-main .product-image {
+        width: 112px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-frame">
+    <nav class="top-nav" aria-label="メインナビゲーション">
+      <span>商品一覧</span>
+      <span>出品</span>
+      <span>リクエスト</span>
+      <span class="active">AI提案</span>
+    </nav>
+    <div class="profile-dot" aria-hidden="true"></div>
+    <section class="screen" data-screen="guided">
+      <header class="screen-header">
+        <p class="eyebrow">交換提案AI</p>
+        <h1>AI提案</h1>
+        <p class="lead">倉庫の商品を使いながら、目的の商品へ近づく交換ルートを確認できます。</p>
+      </header>
+
+      <div class="mode-tabs">
+        <span class="active">ナビモード</span>
+        <span>オートモード</span>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label>開始する商品</label>
+          <div class="select-like">カフェ回数券</div>
+        </div>
+        <div class="field">
+          <label>到達したい商品</label>
+          <div class="select-like">ワイヤレスイヤホン</div>
+        </div>
+        <div class="primary-button">次の提案を見る</div>
+      </div>
+
+      <div class="guided-grid">
+        <aside class="source-card">
+          <p>現在の商品</p>
+          <img class="product-image" src="../../frontend/public/images/demo/generated/cafe-punch-card.png" alt="" />
+          <div>
+            <h2>カフェ回数券</h2>
+            <div class="muted">倉庫保管 / ガチャ対象</div>
+          </div>
+        </aside>
+
+        <section class="proposal-panel">
+          <div class="proposal-top">
+            <img class="product-image" src="../../frontend/public/images/demo/generated/foldable-keyboard.png" alt="" />
+            <div class="proposal-copy">
+              <p class="tiny-label">AIの次の提案</p>
+              <h2>折りたたみキーボード</h2>
+              <div class="muted">価格帯が近く、家電カテゴリへのルートを作りやすい候補です。</div>
+              <div class="pill-row">
+                <span class="pill">価格差 ±18%</span>
+                <span class="pill ai">相手希望と一致</span>
+              </div>
+            </div>
+            <div class="score-ring">78%</div>
+          </div>
+
+          <div class="reason-box">
+            <h3>AIの判断理由</h3>
+            <p>現在の商品より少し価値を上げながら、イヤホンやスピーカーへつながる家電カテゴリに移れます。</p>
+          </div>
+
+          <div class="message-box">
+            <h3>申請文案</h3>
+            <p>カフェ回数券との交換を希望しています。状態も良く、すぐに倉庫側で交換処理できます。</p>
+          </div>
+
+          <div class="action-row">
+            <div class="primary-button">この提案で進める</div>
+            <div class="secondary-button">別候補を見る</div>
+            <div class="ghost-button">保留</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="route-detail">
+        <div class="route-title">
+          <h2>交換ルート</h2>
+          <span class="pill">4ステップ予定</span>
+        </div>
+        <div class="route-flow">
+          <article class="route-step">
+            <span class="step-num">1</span>
+            <strong>カフェ回数券</strong>
+            <div class="muted">開始商品</div>
+          </article>
+          <article class="route-step">
+            <span class="step-num">2</span>
+            <strong>折りたたみキーボード</strong>
+            <div class="muted">提案中</div>
+          </article>
+          <article class="route-step">
+            <span class="step-num">3</span>
+            <strong>Bluetoothスピーカー</strong>
+            <div class="muted">候補</div>
+          </article>
+          <article class="route-step">
+            <span class="step-num">4</span>
+            <strong>ワイヤレスイヤホン</strong>
+            <div class="muted">目標</div>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="auto" hidden>
+      <header class="screen-header">
+        <p class="eyebrow">交換提案AI</p>
+        <h1>AI提案 <span class="plan-badge">Plus</span></h1>
+        <p class="lead">条件を決めて、倉庫内の商品から目的商品までの交換を自動で進めます。</p>
+      </header>
+
+      <div class="mode-tabs">
+        <span>ナビモード</span>
+        <span class="active">オートモード</span>
+      </div>
+
+      <div class="auto-layout">
+        <aside class="auto-card">
+          <p class="tiny-label">自動交換の条件</p>
+          <h3>AIに任せる範囲</h3>
+          <div class="setting-list">
+            <div class="setting-item"><span>目標</span><strong>ワイヤレスイヤホン</strong></div>
+            <div class="setting-item"><span>開始商品</span><strong>カフェ回数券</strong></div>
+            <div class="setting-item"><span>価格差</span><strong>±20%</strong></div>
+            <div class="setting-item"><span>申請上限</span><strong>1日5件</strong></div>
+            <div class="setting-item"><span>高額確認</span><strong>¥10,000以上</strong></div>
+          </div>
+          <div class="action-row">
+            <div class="primary-button">開始</div>
+            <div class="secondary-button">条件を変更</div>
+          </div>
+        </aside>
+
+        <div class="monitor-stack">
+          <section class="monitor-card">
+            <div class="status-band">
+              <div>
+                <p>自動交換</p>
+                <strong>承認待ち</strong>
+              </div>
+              <div class="primary-button">一時停止</div>
+            </div>
+            <div class="progress-lane">
+              <div class="progress-step active">探索中</div>
+              <div class="progress-step active">申請済み</div>
+              <div class="progress-step active">承認待ち</div>
+              <div class="progress-step">次候補探索</div>
+            </div>
+            <div class="monitor-main">
+              <img class="product-image" src="../../frontend/public/images/demo/generated/noise-canceling-headphones.png" alt="" />
+              <div>
+                <p class="tiny-label">現在の候補</p>
+                <h2>ノイズキャンセリングヘッドホン</h2>
+                <div class="muted">イヤホンへの到達前に価値を上げる候補として申請済みです。</div>
+              </div>
+              <div class="score-ring">64%</div>
+            </div>
+          </section>
+
+          <section class="log-card">
+            <h3>進行ログ</h3>
+            <ul class="log-list">
+              <li><time>10:20</time><span>条件に合う倉庫商品を3件検出</span></li>
+              <li><time>10:21</time><span>折りたたみキーボードへの交換申請を作成</span></li>
+              <li><time>10:22</time><span>相手の返答待ちに移行</span></li>
+              <li><time>10:25</time><span>次候補としてヘッドホンを監視中</span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const mode = params.get("mode") === "auto" ? "auto" : "guided";
+    document.querySelectorAll("[data-screen]").forEach((screen) => {
+      screen.hidden = screen.dataset.screen !== mode;
+    });
+  </script>
+</body>
+</html>
