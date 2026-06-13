@@ -84,7 +84,7 @@
 .home-screen__categories {
     display: flex;
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
     overflow-x: auto;
     padding-bottom: 4px;
 }
@@ -108,6 +108,37 @@
     color: #ffffff;
 }
 
+.home-screen__listing-filter {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 24px;
+    padding: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.home-screen__listing-filter-button {
+    min-width: 0;
+    height: 38px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #374151;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.home-screen__listing-filter-button:hover {
+    background: #f1f5f3;
+}
+
+.home-screen__listing-filter-button--active {
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
 .home-screen__section-title {
     display: flex;
     align-items: baseline;
@@ -115,7 +146,7 @@
     margin-bottom: 12px;
 }
 
-.home-screen__section-title--secondary {
+.home-screen__warehouse-section {
     margin-top: 34px;
 }
 

@@ -9,7 +9,15 @@ type HomeScreenProps = {
     favoriteItemIds: string[];
     onToggleFavorite: (itemId: string) => void;
 };
+
+type ListingFilter = "all" | "direct" | "warehouse";
+
 const categories = ["すべて", "ファッション", "バッグ", "家電", "クーポン"];
+const listingFilters: Array<{ label: string; value: ListingFilter }> = [
+    { label: "すべて", value: "all" },
+    { label: "通常出品", value: "direct" },
+    { label: "倉庫", value: "warehouse" },
+];
 
 function HomeScreen({
     onSelectItem,
@@ -17,6 +25,8 @@ function HomeScreen({
     onToggleFavorite,
 }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
+    const [activeListingFilter, setActiveListingFilter] =
+        useState<ListingFilter>("all");
     const [searchText, setSearchText] = useState("");
     const [items, setItems] = useState<Item[]>([]);
 
@@ -44,6 +54,8 @@ function HomeScreen({
     const warehouseItems = filteredItems.filter(
         (item) => item.listingType === "warehouse"
     );
+    const shouldShowDirectItems = activeListingFilter !== "warehouse";
+    const shouldShowWarehouseItems = activeListingFilter !== "direct";
 
     return (
         <section className="home-screen">
@@ -88,50 +100,81 @@ function HomeScreen({
                 ))}
             </nav>
 
-            <div className="home-screen__section-title">
-                <h2>通常出品</h2>
-                <span>{directItems.length}件</span>
+            <div className="home-screen__listing-filter" aria-label="表示する商品">
+                {listingFilters.map((filter) => (
+                    <button
+                        className={
+                            filter.value === activeListingFilter
+                                ? "home-screen__listing-filter-button home-screen__listing-filter-button--active"
+                                : "home-screen__listing-filter-button"
+                        }
+                        key={filter.value}
+                        onClick={() => setActiveListingFilter(filter.value)}
+                        type="button"
+                    >
+                        {filter.label}
+                    </button>
+                ))}
             </div>
 
-            {directItems.length > 0 ? (
-                <div className="home-screen__grid">
-                    {directItems.map((item) => (
-                        <ItemCard
-                            key={item.id}
-                            item={item}
-                            isFavorite={favoriteItemIds.includes(item.id)}
-                            onSelectItem={onSelectItem}
-                            onToggleFavorite={onToggleFavorite}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="home-screen__empty">
-                    <p>該当する通常出品がありません</p>
-                    <span>検索ワードやカテゴリを変えてみてください。</span>
-                </div>
+            {shouldShowDirectItems && (
+                <>
+                    <div className="home-screen__section-title">
+                        <h2>通常出品</h2>
+                        <span>{directItems.length}件</span>
+                    </div>
+
+                    {directItems.length > 0 ? (
+                        <div className="home-screen__grid">
+                            {directItems.map((item) => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    isFavorite={favoriteItemIds.includes(item.id)}
+                                    onSelectItem={onSelectItem}
+                                    onToggleFavorite={onToggleFavorite}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="home-screen__empty">
+                            <p>該当する通常出品がありません</p>
+                            <span>検索ワードやカテゴリを変えてみてください。</span>
+                        </div>
+                    )}
+                </>
             )}
 
-            <div className="home-screen__section-title home-screen__section-title--secondary">
-                <h2>AI / ガチャ倉庫</h2>
-                <span>{warehouseItems.length}件</span>
-            </div>
+            {shouldShowWarehouseItems && (
+                <div
+                    className={
+                        shouldShowDirectItems
+                            ? "home-screen__warehouse-section"
+                            : undefined
+                    }
+                >
+                    <div className="home-screen__section-title">
+                        <h2>AI / ガチャ倉庫</h2>
+                        <span>{warehouseItems.length}件</span>
+                    </div>
 
-            {warehouseItems.length > 0 ? (
-                <div className="home-screen__grid">
-                    {warehouseItems.map((item) => (
-                        <ItemCard
-                            key={item.id}
-                            item={item}
-                            onSelectItem={onSelectItem}
-                            showFavoriteButton={false}
-                        />
-                    ))}
-                </div>
-            ) : (
-                <div className="home-screen__empty">
-                    <p>該当する倉庫商品がありません</p>
-                    <span>検索ワードやカテゴリを変えてみてください。</span>
+                    {warehouseItems.length > 0 ? (
+                        <div className="home-screen__grid">
+                            {warehouseItems.map((item) => (
+                                <ItemCard
+                                    key={item.id}
+                                    item={item}
+                                    onSelectItem={onSelectItem}
+                                    showFavoriteButton={false}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="home-screen__empty">
+                            <p>該当する倉庫商品がありません</p>
+                            <span>検索ワードやカテゴリを変えてみてください。</span>
+                        </div>
+                    )}
                 </div>
             )}
         </section>
