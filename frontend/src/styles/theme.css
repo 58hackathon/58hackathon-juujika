@@ -1,10 +1,24 @@
 :root {
-  --color-primary: #0757ff;
-  --color-accent: #b7ff16;
-  --color-text: #111111;
+  --color-primary: #2457ff;
+  --color-primary-dark: #1237b8;
+  --color-primary-soft: #edf3ff;
+  --color-accent: #33d68a;
+  --color-accent-soft: #e9fbf2;
+  --color-text: #111827;
   --color-muted: #6b7280;
-  --color-border: #e5e7eb;
+  --color-border: #dfe6f0;
   --color-surface: #ffffff;
-  --radius-card: 8px;
+  --color-surface-soft: #f8fafc;
+  --color-warning-soft: #fff5e8;
+  --color-warning: #c65d10;
+  --gradient-primary: linear-gradient(135deg, #5f7cff 0%, #2457ff 52%, #1237b8 100%);
+  --gradient-accent: linear-gradient(135deg, #33d68a 0%, #9df777 58%, #d8ff5c 100%);
+  --gradient-dark: linear-gradient(135deg, #111827 0%, #263347 55%, #374151 100%);
+  --gradient-soft: linear-gradient(135deg, #ffffff 0%, #f4f7ff 52%, #eef6ff 100%);
+  --gradient-ai: linear-gradient(135deg, #1dbf9f 0%, #168875 56%, #0f5f56 100%);
+  --shadow-soft: 0 10px 28px rgba(35, 45, 72, 0.08);
+  --shadow-card: 0 18px 44px rgba(35, 45, 72, 0.12);
+  --shadow-focus: 0 0 0 4px rgba(36, 87, 255, 0.14);
+  --radius-card: 18px;
+  --radius-control: 14px;
 }
-
