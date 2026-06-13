@@ -12,16 +12,21 @@ type GachaScreenProps = {
 };
 
 type CompletedGachaExchange = {
+    id: string;
     offeredItem: Item;
     receivedItem: Item;
     poolSize: number;
     reason: string;
+    priceBandLabel: string;
+    categoryLabel: string;
     completedAt: string;
 };
 
 type GachaStatus = "idle" | "exchanging" | "complete" | "empty";
 
 const allCategoriesValue = "all";
+const gachaHistoryStorageKeyPrefix = "warashibe.gachaHistory";
+const maxGachaHistoryItems = 10;
 const minimumExchangeMs = 1100;
 
 function GachaScreen({ currentUser }: GachaScreenProps) {
@@ -30,6 +35,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
     const [selectedCategory, setSelectedCategory] = useState(allCategoriesValue);
     const [completedExchange, setCompletedExchange] =
         useState<CompletedGachaExchange>();
+    const [exchangeHistory, setExchangeHistory] = useState<CompletedGachaExchange[]>([]);
     const [status, setStatus] = useState<GachaStatus>("idle");
     const [isExchangeConfirmOpen, setIsExchangeConfirmOpen] = useState(false);
 
@@ -37,17 +43,13 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
         const loadItems = async () => {
             const itemsFromApi = await getItems();
             setItems(itemsFromApi);
-
-            const firstSourceItem = itemsFromApi.find(
-                (item) =>
-                    item.status === "available" &&
-                    isCurrentUserResource(item.ownerId, currentUser.id)
-            );
-
-            setSourceItemId((currentId) => currentId || firstSourceItem?.id || "");
         };
 
         loadItems();
+    }, []);
+
+    useEffect(() => {
+        setExchangeHistory(getStoredGachaHistory(currentUser.id));
     }, [currentUser.id]);
 
     const sourceItems = useMemo(
@@ -144,7 +146,20 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
             return;
         }
 
-        setCompletedExchange(toCompletedExchange(sourceItem, gachaResult));
+        const completedGachaExchange = toCompletedExchange(
+            sourceItem,
+            gachaResult,
+            priceBand.label,
+            selectedCategory === allCategoriesValue ? "すべて" : selectedCategory
+        );
+
+        setCompletedExchange(completedGachaExchange);
+        setExchangeHistory((currentHistory) =>
+            saveGachaHistory(currentUser.id, [
+                completedGachaExchange,
+                ...currentHistory,
+            ])
+        );
         setStatus("complete");
     };
 
@@ -181,6 +196,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                                     onChange={(event) => handleSourceChange(event.target.value)}
                                     value={sourceItemId}
                                 >
+                                    <option value=""></option>
                                     {sourceItems.map((item) => (
                                         <option key={item.id} value={item.id}>
                                             {item.title}
@@ -339,6 +355,45 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                 )}
             </section>
 
+            <section className="gacha-screen__history" aria-label="ガチャ交換履歴">
+                <div className="gacha-screen__section-title">
+                    <span>履歴</span>
+                    <h2>交換履歴</h2>
+                </div>
+
+                {exchangeHistory.length > 0 ? (
+                    <div className="gacha-screen__history-list">
+                        {exchangeHistory.map((exchange) => (
+                            <article className="gacha-screen__history-item" key={exchange.id}>
+                                <div className="gacha-screen__history-meta">
+                                    <time dateTime={exchange.completedAt}>
+                                        {formatGachaHistoryDate(exchange.completedAt)}
+                                    </time>
+                                    <span>{exchange.priceBandLabel}</span>
+                                    <span>{exchange.categoryLabel}</span>
+                                    <strong>{exchange.poolSize}件から成立</strong>
+                                </div>
+
+                                <div className="gacha-screen__history-pair">
+                                    <GachaHistoryProduct item={exchange.offeredItem} label="出した商品" />
+                                    <div className="gacha-screen__history-arrow" aria-hidden="true">
+                                        ↔
+                                    </div>
+                                    <GachaHistoryProduct item={exchange.receivedItem} label="届いた商品" />
+                                </div>
+
+                                <p>{exchange.reason}</p>
+                            </article>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="gacha-screen__empty-card">
+                        <h3>まだ交換履歴がありません</h3>
+                        <p>ガチャ交換が成立すると、ここに出した商品と届いた商品が残ります。</p>
+                    </div>
+                )}
+            </section>
+
             <ConfirmationNotice
                 cancelLabel="条件を見直す"
                 confirmLabel="ガチャを回す"
@@ -370,6 +425,21 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
     );
 }
 
+function GachaHistoryProduct({ item, label }: { item: Item; label: string }) {
+    return (
+        <div className="gacha-screen__history-product">
+            <img src={item.imageUrl} alt="" />
+            <div>
+                <span>{label}</span>
+                <strong>{item.title}</strong>
+                <p>
+                    {item.category} / ¥{item.price.toLocaleString()}
+                </p>
+            </div>
+        </div>
+    );
+}
+
 function GachaExchangeCard({ item, label }: { item: Item; label: string }) {
     return (
         <article className="gacha-screen__exchange-card">
@@ -391,15 +461,104 @@ function getExchangeButtonLabel(status: GachaStatus): string {
 
 function toCompletedExchange(
     offeredItem: Item,
-    result: ItemGachaResult
+    result: ItemGachaResult,
+    priceBandLabel: string,
+    categoryLabel: string
 ): CompletedGachaExchange {
+    const completedAt = new Date().toISOString();
+
     return {
+        id: `gacha_${completedAt}_${offeredItem.id}_${result.item.id}`,
         offeredItem,
         receivedItem: result.item,
         poolSize: result.poolSize,
         reason: result.reason,
-        completedAt: new Date().toISOString(),
+        priceBandLabel,
+        categoryLabel,
+        completedAt,
     };
+}
+
+function getStoredGachaHistory(userId: string): CompletedGachaExchange[] {
+    try {
+        const storedValue = window.localStorage.getItem(getGachaHistoryStorageKey(userId));
+        if (!storedValue) return [];
+
+        const parsedValue: unknown = JSON.parse(storedValue);
+        if (!Array.isArray(parsedValue)) return [];
+
+        return parsedValue
+            .filter(isCompletedGachaExchange)
+            .slice(0, maxGachaHistoryItems);
+    } catch (error) {
+        console.warn("ガチャ交換履歴を読み込めませんでした", error);
+        return [];
+    }
+}
+
+function saveGachaHistory(
+    userId: string,
+    history: CompletedGachaExchange[]
+): CompletedGachaExchange[] {
+    const nextHistory = history.slice(0, maxGachaHistoryItems);
+
+    try {
+        window.localStorage.setItem(
+            getGachaHistoryStorageKey(userId),
+            JSON.stringify(nextHistory)
+        );
+    } catch (error) {
+        console.warn("ガチャ交換履歴を保存できませんでした", error);
+    }
+
+    return nextHistory;
+}
+
+function getGachaHistoryStorageKey(userId: string): string {
+    return `${gachaHistoryStorageKeyPrefix}.${userId}`;
+}
+
+function isCompletedGachaExchange(value: unknown): value is CompletedGachaExchange {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        isHistoryItem(value.offeredItem) &&
+        isHistoryItem(value.receivedItem) &&
+        typeof value.poolSize === "number" &&
+        typeof value.reason === "string" &&
+        typeof value.priceBandLabel === "string" &&
+        typeof value.categoryLabel === "string" &&
+        typeof value.completedAt === "string"
+    );
+}
+
+function isHistoryItem(value: unknown): value is Item {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        typeof value.title === "string" &&
+        typeof value.imageUrl === "string" &&
+        typeof value.category === "string" &&
+        typeof value.price === "number"
+    );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function formatGachaHistoryDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "日時不明";
+
+    return new Intl.DateTimeFormat("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(date);
 }
 
 function wait(milliseconds: number): Promise<void> {

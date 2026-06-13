@@ -143,6 +143,11 @@
     color: var(--color-text);
 }
 
+.ai-secondary-button:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
 .ai-soft-button {
     border: 0;
     background: #eef4ff;
@@ -401,6 +406,245 @@
     line-height: 1.45;
 }
 
+.ai-saved-routes {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: var(--shadow-soft);
+}
+
+.ai-saved-route-list {
+    display: grid;
+    gap: 14px;
+}
+
+.ai-saved-route {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid rgba(223, 230, 240, 0.92);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #f8fbff);
+}
+
+.ai-saved-route__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: start;
+}
+
+.ai-saved-route__header p,
+.ai-saved-route__header h3,
+.ai-saved-route__header span {
+    margin: 0;
+}
+
+.ai-saved-route__header p {
+    margin-bottom: 6px;
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.ai-saved-route__header h3 {
+    color: var(--color-text);
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+.ai-saved-route__header span {
+    display: block;
+    margin-top: 6px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.55;
+}
+
+.ai-saved-route__score {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    min-width: 68px;
+    padding: 9px 10px;
+    border-radius: 14px;
+    background: var(--color-accent-soft);
+    color: #047857;
+    font-weight: 950;
+}
+
+.ai-saved-route__score strong {
+    font-size: 24px;
+}
+
+.ai-saved-route__score span {
+    color: #168875;
+    font-size: 13px;
+}
+
+.ai-saved-route__progress {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 8px;
+}
+
+.ai-saved-route__progress-step {
+    height: 9px;
+    border-radius: 999px;
+    background: #e5e7eb;
+}
+
+.ai-saved-route__progress-step--requested {
+    background: #bfdbfe;
+}
+
+.ai-saved-route__progress-step--approved {
+    background: #fde68a;
+}
+
+.ai-saved-route__progress-step--completed {
+    background: #34d399;
+}
+
+.ai-saved-route__steps {
+    display: grid;
+    gap: 10px;
+}
+
+.ai-saved-route-step {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.ai-saved-route-step__number,
+.ai-saved-route-step__items > span {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    font-weight: 950;
+}
+
+.ai-saved-route-step__number {
+    background: #eef4ff;
+    color: var(--color-primary);
+}
+
+.ai-saved-route-step__items {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+}
+
+.ai-saved-route-step__items > span {
+    background: #111827;
+    color: #ffffff;
+}
+
+.ai-saved-route-step__product {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 9px;
+    min-width: 0;
+}
+
+.ai-saved-route-step__product img {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #eef2ff;
+}
+
+.ai-saved-route-step__product span,
+.ai-saved-route-step__product p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.ai-saved-route-step__product strong {
+    display: block;
+    margin-top: 3px;
+    color: var(--color-text);
+    font-size: 13px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.ai-saved-route-step__product p {
+    margin-top: 3px;
+    line-height: 1.35;
+}
+
+.ai-saved-route-step__status {
+    display: grid;
+    justify-items: end;
+    gap: 5px;
+}
+
+.ai-saved-route-step__badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.ai-saved-route-step__badge--requested {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.ai-saved-route-step__badge--approved {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.ai-saved-route-step__badge--completed {
+    background: var(--color-accent-soft);
+    color: #047857;
+}
+
+.ai-saved-route-step__status time {
+    color: var(--color-muted);
+    font-size: 11px;
+    font-weight: 850;
+}
+
+.ai-saved-route__delete {
+    justify-self: end;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+}
+
 .ai-auto-layout {
     display: grid;
     grid-template-columns: 340px minmax(0, 1fr);
@@ -602,6 +846,9 @@
     .ai-proposal-controls,
     .ai-guided-layout,
     .ai-proposal-panel__top,
+    .ai-saved-route__header,
+    .ai-saved-route-step,
+    .ai-saved-route-step__items,
     .ai-auto-layout,
     .ai-monitor-main,
     .ai-action-row {
@@ -643,7 +890,25 @@
         grid-template-columns: 1fr;
     }
 
+    .ai-saved-route-step__number,
+    .ai-saved-route-step__items > span {
+        justify-self: center;
+    }
+
+    .ai-saved-route-step__items > span {
+        transform: rotate(90deg);
+    }
+
+    .ai-saved-route-step__status {
+        justify-items: start;
+    }
+
+    .ai-saved-route__delete {
+        justify-self: stretch;
+    }
+
     .ai-route-detail,
+    .ai-saved-routes,
     .ai-proposal-panel,
     .ai-auto-settings,
     .ai-monitor-card,

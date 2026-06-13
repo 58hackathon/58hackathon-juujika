@@ -3,6 +3,7 @@ import { getAiTradeRoutes } from "../features/aiProposals/aiProposalApi";
 import type { AiTradeRoute } from "../features/aiProposals/aiProposalTypes";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
+import { createTradeRequest, updateTradeRequestStatus } from "../features/tradeRequests/tradeRequestApi";
 import type { RegisteredUser } from "../features/users/userTypes";
 import "./AiProposalScreen.css";
 
@@ -12,8 +13,32 @@ type AiProposalScreenProps = {
 
 type AiMode = "guided" | "auto";
 type AutoStatus = "running" | "paused";
+type SavedRouteStepStatus = "ready" | "requested" | "approved" | "completed";
+
+type SavedRouteStep = {
+    id: string;
+    fromItem: Item;
+    toItem: Item;
+    status: SavedRouteStepStatus;
+    tradeRequestId?: string;
+    requestedAt?: string;
+    updatedAt?: string;
+};
+
+type SavedAiRoute = {
+    id: string;
+    title: string;
+    summary: string;
+    matchScore: number;
+    source: AiTradeRoute["source"] | "manual";
+    steps: SavedRouteStep[];
+    createdAt: string;
+    updatedAt: string;
+};
 
 const fallbackImageUrl = "/images/demo/generated/reading-card-500.png";
+const savedRouteStorageKeyPrefix = "warashibe.savedAiRoutes";
+const maxSavedRoutes = 8;
 
 function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
@@ -23,29 +48,22 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     const [candidateIndex, setCandidateIndex] = useState(0);
     const [acceptedRouteItemIds, setAcceptedRouteItemIds] = useState<string[]>([]);
     const [aiRoutes, setAiRoutes] = useState<AiTradeRoute[]>([]);
+    const [savedRoutes, setSavedRoutes] = useState<SavedAiRoute[]>([]);
+    const [requestingStepId, setRequestingStepId] = useState("");
     const [autoStatus, setAutoStatus] = useState<AutoStatus>("running");
 
     useEffect(() => {
         const loadItems = async () => {
             const itemsFromApi = await getItems();
             setItems(itemsFromApi);
-
-            const firstWarehouseItem =
-                itemsFromApi.find(isAiWarehouseItem) ??
-                itemsFromApi.find((item) => item.listingType === "warehouse") ??
-                itemsFromApi[0];
-            const firstGoalItem =
-                itemsFromApi.find((item) => item.id !== firstWarehouseItem?.id) ??
-                itemsFromApi[1] ??
-                firstWarehouseItem;
-
-            setSourceItemId(firstWarehouseItem?.id ?? "");
-            setGoalItemId(firstGoalItem?.id ?? "");
-            setAcceptedRouteItemIds(firstWarehouseItem ? [firstWarehouseItem.id] : []);
         };
 
         loadItems();
     }, []);
+
+    useEffect(() => {
+        setSavedRoutes(getStoredSavedRoutes(currentUser.id));
+    }, [currentUser.id]);
 
     const warehouseItems = useMemo(() => {
         const filteredItems = items.filter(
@@ -56,11 +74,15 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
     }, [items]);
 
     const goalItems = items.filter((item) => item.id !== sourceItemId);
-    const sourceItem = findItem(items, sourceItemId) ?? warehouseItems[0];
-    const goalItem = findItem(items, goalItemId) ?? goalItems[0];
+    const sourceItem = findItem(items, sourceItemId);
+    const goalItem = findItem(items, goalItemId);
+    const hasAiSelection = Boolean(sourceItem && goalItem);
 
     useEffect(() => {
-        if (!sourceItemId || !goalItemId || items.length === 0) return;
+        if (!sourceItemId || !goalItemId || items.length === 0) {
+            setAiRoutes([]);
+            return;
+        }
 
         let isActive = true;
 
@@ -97,16 +119,20 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
                 ),
         [goalItem, items, sourceItem?.id]
     );
-    const activeAiRoute = aiRoutes[candidateIndex % Math.max(aiRoutes.length, 1)];
+    const activeAiRoute = hasAiSelection
+        ? aiRoutes[candidateIndex % Math.max(aiRoutes.length, 1)]
+        : undefined;
     const aiCandidate = activeAiRoute
         ? findItem(items, activeAiRoute.steps[1]?.itemId ?? "")
         : undefined;
     const guidedCandidate =
-        aiCandidate ??
-        guidedCandidates[candidateIndex % Math.max(guidedCandidates.length, 1)] ??
-        goalItem ??
-        sourceItem;
-    const autoAiRoute = aiRoutes[0];
+        hasAiSelection
+            ? aiCandidate ??
+            guidedCandidates[candidateIndex % Math.max(guidedCandidates.length, 1)] ??
+            goalItem ??
+            sourceItem
+            : undefined;
+    const autoAiRoute = hasAiSelection ? aiRoutes[0] : undefined;
     const autoAiCandidate = autoAiRoute
         ? findItem(items, autoAiRoute.steps[1]?.itemId ?? "")
         : undefined;
@@ -117,11 +143,13 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
         goalItem
     );
     const autoCandidate =
-        autoAiCandidate ??
-        guidedCandidate ??
-        items.find((item) => item.title.includes("ヘッドホン")) ??
-        goalItem ??
-        sourceItem;
+        hasAiSelection
+            ? autoAiCandidate ??
+            guidedCandidate ??
+            items.find((item) => item.title.includes("ヘッドホン")) ??
+            goalItem ??
+            sourceItem
+            : undefined;
     const highValueNotice =
         autoCandidate !== undefined && autoCandidate.price >= 10000
             ? `${autoCandidate.title}は高額商品として検知済みです。通知だけ行い、自動交換は継続します。`
@@ -147,6 +175,84 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
             return [...currentIds, guidedCandidate.id];
         });
         setCandidateIndex((currentIndex) => currentIndex + 1);
+    };
+
+    const handleSaveRoute = () => {
+        if (routeItems.length < 2) return;
+
+        const savedRoute = createSavedRoute(routeItems, activeAiRoute);
+        setSavedRoutes((currentRoutes) =>
+            saveStoredSavedRoutes(currentUser.id, [savedRoute, ...currentRoutes])
+        );
+    };
+
+    const handleDeleteSavedRoute = (routeId: string) => {
+        setSavedRoutes((currentRoutes) =>
+            saveStoredSavedRoutes(
+                currentUser.id,
+                currentRoutes.filter((route) => route.id !== routeId)
+            )
+        );
+    };
+
+    const handleSendRouteRequest = async (routeId: string, stepId: string) => {
+        const route = savedRoutes.find((savedRoute) => savedRoute.id === routeId);
+        const step = route?.steps.find((routeStep) => routeStep.id === stepId);
+        if (!step || step.status !== "ready") return;
+
+        setRequestingStepId(stepId);
+
+        try {
+            const tradeRequest = await createTradeRequest({
+                targetItemId: step.toItem.id,
+                targetItemTitle: step.toItem.title,
+                offeredItemId: step.fromItem.id,
+                offeredItemTitle: step.fromItem.title,
+                requesterId: currentUser.id,
+                requesterName: currentUser.username,
+                receiverId: step.toItem.ownerId,
+                receiverName: step.toItem.ownerName,
+                message: `${step.fromItem.title}との交換を希望しています。AI提案ルートの次ステップとして申請しました。`,
+            });
+
+            setSavedRoutes((currentRoutes) =>
+                saveStoredSavedRoutes(
+                    currentUser.id,
+                    updateSavedRouteStep(currentRoutes, routeId, stepId, {
+                        status: "requested",
+                        tradeRequestId: tradeRequest.id,
+                        requestedAt: tradeRequest.createdAt,
+                        updatedAt: tradeRequest.createdAt,
+                    })
+                )
+            );
+        } finally {
+            setRequestingStepId("");
+        }
+    };
+
+    const handleAdvanceRouteStep = async (routeId: string, stepId: string) => {
+        const route = savedRoutes.find((savedRoute) => savedRoute.id === routeId);
+        const step = route?.steps.find((routeStep) => routeStep.id === stepId);
+        const nextStatus = step ? getNextSavedRouteStepStatus(step.status) : undefined;
+        if (!step || !nextStatus) return;
+
+        if (
+            step.tradeRequestId &&
+            (nextStatus === "approved" || nextStatus === "completed")
+        ) {
+            await updateTradeRequestStatus(step.tradeRequestId, nextStatus);
+        }
+
+        setSavedRoutes((currentRoutes) =>
+            saveStoredSavedRoutes(
+                currentUser.id,
+                updateSavedRouteStep(currentRoutes, routeId, stepId, {
+                    status: nextStatus,
+                    updatedAt: new Date().toISOString(),
+                })
+            )
+        );
     };
 
     return (
@@ -187,10 +293,16 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
                     goalItem={goalItem}
                     goalItems={goalItems}
                     onAcceptProposal={handleAcceptProposal}
+                    onAdvanceRouteStep={handleAdvanceRouteStep}
                     onChangeGoal={handleGoalChange}
                     onChangeSource={handleSourceChange}
+                    onDeleteSavedRoute={handleDeleteSavedRoute}
                     onNextCandidate={() => setCandidateIndex((currentIndex) => currentIndex + 1)}
+                    onSaveRoute={handleSaveRoute}
+                    onSendRouteRequest={handleSendRouteRequest}
+                    requestingStepId={requestingStepId}
                     routeItems={routeItems}
+                    savedRoutes={savedRoutes}
                     sourceItem={sourceItem}
                     sourceItems={warehouseItems}
                 />
@@ -224,10 +336,16 @@ function GuidedMode({
     goalItem,
     goalItems,
     onAcceptProposal,
+    onAdvanceRouteStep,
     onChangeGoal,
     onChangeSource,
+    onDeleteSavedRoute,
     onNextCandidate,
+    onSaveRoute,
+    onSendRouteRequest,
+    requestingStepId,
     routeItems,
+    savedRoutes,
     sourceItem,
     sourceItems,
 }: {
@@ -237,10 +355,16 @@ function GuidedMode({
     goalItem: Item | undefined;
     goalItems: Item[];
     onAcceptProposal: () => void;
+    onAdvanceRouteStep: (routeId: string, stepId: string) => void;
     onChangeGoal: (itemId: string) => void;
     onChangeSource: (itemId: string) => void;
+    onDeleteSavedRoute: (routeId: string) => void;
     onNextCandidate: () => void;
+    onSaveRoute: () => void;
+    onSendRouteRequest: (routeId: string, stepId: string) => void;
+    requestingStepId: string;
     routeItems: Item[];
+    savedRoutes: SavedAiRoute[];
     sourceItem: Item | undefined;
     sourceItems: Item[];
 }) {
@@ -258,6 +382,7 @@ function GuidedMode({
                         onChange={(event) => onChangeSource(event.target.value)}
                         value={sourceItem?.id ?? ""}
                     >
+                        <option value=""></option>
                         {sourceItems.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.title}
@@ -272,6 +397,7 @@ function GuidedMode({
                         onChange={(event) => onChangeGoal(event.target.value)}
                         value={goalItem?.id ?? ""}
                     >
+                        <option value=""></option>
                         {goalItems.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.title}
@@ -336,6 +462,14 @@ function GuidedMode({
                                 <button className="ai-primary-button" onClick={onAcceptProposal} type="button">
                                     この提案で進める
                                 </button>
+                                <button
+                                    className="ai-secondary-button"
+                                    disabled={routeItems.length < 2}
+                                    onClick={onSaveRoute}
+                                    type="button"
+                                >
+                                    ルートを保存
+                                </button>
                                 <button className="ai-secondary-button" onClick={onNextCandidate} type="button">
                                     別候補を見る
                                 </button>
@@ -354,7 +488,163 @@ function GuidedMode({
             </section>
 
             <RouteTimeline items={routeItems} />
+            <SavedRouteMonitor
+                onAdvanceRouteStep={onAdvanceRouteStep}
+                onDeleteSavedRoute={onDeleteSavedRoute}
+                onSendRouteRequest={onSendRouteRequest}
+                requestingStepId={requestingStepId}
+                routes={savedRoutes}
+            />
         </>
+    );
+}
+
+function SavedRouteMonitor({
+    onAdvanceRouteStep,
+    onDeleteSavedRoute,
+    onSendRouteRequest,
+    requestingStepId,
+    routes,
+}: {
+    onAdvanceRouteStep: (routeId: string, stepId: string) => void;
+    onDeleteSavedRoute: (routeId: string) => void;
+    onSendRouteRequest: (routeId: string, stepId: string) => void;
+    requestingStepId: string;
+    routes: SavedAiRoute[];
+}) {
+    return (
+        <section className="ai-saved-routes">
+            <div className="ai-route-detail__top">
+                <div>
+                    <p>保存済みルート</p>
+                    <h2>申請と進捗モニター</h2>
+                    <span>{routes.length}件保存中</span>
+                </div>
+            </div>
+
+            {routes.length > 0 ? (
+                <div className="ai-saved-route-list">
+                    {routes.map((route) => (
+                        <article className="ai-saved-route" key={route.id}>
+                            <div className="ai-saved-route__header">
+                                <div>
+                                    <p>{formatSavedRouteDate(route.createdAt)}</p>
+                                    <h3>{route.title}</h3>
+                                    <span>{route.summary}</span>
+                                </div>
+                                <div className="ai-saved-route__score">
+                                    <strong>{getSavedRouteCompletedCount(route)}</strong>
+                                    <span>/ {route.steps.length}</span>
+                                </div>
+                            </div>
+
+                            <div className="ai-saved-route__progress">
+                                {route.steps.map((step) => (
+                                    <span
+                                        className={`ai-saved-route__progress-step ai-saved-route__progress-step--${step.status}`}
+                                        key={`${step.id}_progress`}
+                                    />
+                                ))}
+                            </div>
+
+                            <div className="ai-saved-route__steps">
+                                {route.steps.map((step, index) => (
+                                    <SavedRouteStepItem
+                                        index={index}
+                                        isRequesting={requestingStepId === step.id}
+                                        key={step.id}
+                                        onAdvanceRouteStep={onAdvanceRouteStep}
+                                        onSendRouteRequest={onSendRouteRequest}
+                                        routeId={route.id}
+                                        step={step}
+                                    />
+                                ))}
+                            </div>
+
+                            <button
+                                className="ai-saved-route__delete"
+                                onClick={() => onDeleteSavedRoute(route.id)}
+                                type="button"
+                            >
+                                ルートを削除
+                            </button>
+                        </article>
+                    ))}
+                </div>
+            ) : (
+                <div className="ai-proposal-empty">
+                    <h2>保存済みルートはまだありません</h2>
+                    <p>提案ルートが決まったら保存して、交換申請の進捗をここで追えます。</p>
+                </div>
+            )}
+        </section>
+    );
+}
+
+function SavedRouteStepItem({
+    index,
+    isRequesting,
+    onAdvanceRouteStep,
+    onSendRouteRequest,
+    routeId,
+    step,
+}: {
+    index: number;
+    isRequesting: boolean;
+    onAdvanceRouteStep: (routeId: string, stepId: string) => void;
+    onSendRouteRequest: (routeId: string, stepId: string) => void;
+    routeId: string;
+    step: SavedRouteStep;
+}) {
+    const nextActionLabel = getSavedRouteStepActionLabel(step.status);
+
+    return (
+        <article className="ai-saved-route-step">
+            <div className="ai-saved-route-step__number">{index + 1}</div>
+            <div className="ai-saved-route-step__items">
+                <SavedRouteStepProduct item={step.fromItem} label="出す商品" />
+                <span aria-hidden="true">→</span>
+                <SavedRouteStepProduct item={step.toItem} label="狙う商品" />
+            </div>
+            <div className="ai-saved-route-step__status">
+                <span className={`ai-saved-route-step__badge ai-saved-route-step__badge--${step.status}`}>
+                    {getSavedRouteStepStatusLabel(step.status)}
+                </span>
+                {step.updatedAt && <time>{formatSavedRouteDate(step.updatedAt)}</time>}
+            </div>
+            {nextActionLabel && (
+                <button
+                    className="ai-secondary-button"
+                    disabled={isRequesting}
+                    onClick={() => {
+                        if (step.status === "ready") {
+                            void onSendRouteRequest(routeId, step.id);
+                            return;
+                        }
+
+                        void onAdvanceRouteStep(routeId, step.id);
+                    }}
+                    type="button"
+                >
+                    {isRequesting ? "送信中..." : nextActionLabel}
+                </button>
+            )}
+        </article>
+    );
+}
+
+function SavedRouteStepProduct({ item, label }: { item: Item; label: string }) {
+    return (
+        <div className="ai-saved-route-step__product">
+            <img src={item.imageUrl || fallbackImageUrl} alt="" />
+            <div>
+                <span>{label}</span>
+                <strong>{item.title}</strong>
+                <p>
+                    {item.ownerName} / ¥{item.price.toLocaleString()}
+                </p>
+            </div>
+        </div>
     );
 }
 
@@ -402,6 +692,7 @@ function AutoMode({
                         onChange={(event) => onChangeGoal(event.target.value)}
                         value={goalItem?.id ?? ""}
                     >
+                        <option value=""></option>
                         {[goalItem, ...sourceItems]
                             .filter((item): item is Item => item !== undefined)
                             .filter((item, index, array) =>
@@ -421,6 +712,7 @@ function AutoMode({
                         onChange={(event) => onChangeSource(event.target.value)}
                         value={sourceItem?.id ?? ""}
                     >
+                        <option value=""></option>
                         {sourceItems.map((item) => (
                             <option key={item.id} value={item.id}>
                                 {item.title}
@@ -626,6 +918,187 @@ function getWarehouseUseCaseText(item: Item): string {
     if (item.warehouseUseCase === "gacha") return "ガチャ対象";
 
     return "AI対象";
+}
+
+function createSavedRoute(
+    routeItems: Item[],
+    aiRoute: AiTradeRoute | undefined
+): SavedAiRoute {
+    const createdAt = new Date().toISOString();
+    const routeId = `saved_route_${Date.now()}_${routeItems[0]?.id ?? "start"}`;
+
+    return {
+        id: routeId,
+        title:
+            aiRoute?.title ??
+            `${routeItems[0]?.title ?? "開始商品"}から${routeItems[routeItems.length - 1]?.title ?? "目標商品"}へ`,
+        summary: aiRoute?.summary ?? "保存した交換ルートです。各ステップごとに交換申請を送れます。",
+        matchScore: aiRoute?.matchScore ?? 0,
+        source: aiRoute?.source ?? "manual",
+        steps: routeItems.slice(0, -1).map((item, index) => {
+            const nextItem = routeItems[index + 1];
+
+            return {
+                id: `${routeId}_step_${index}_${item.id}_${nextItem.id}`,
+                fromItem: item,
+                toItem: nextItem,
+                status: "ready",
+            };
+        }),
+        createdAt,
+        updatedAt: createdAt,
+    };
+}
+
+function updateSavedRouteStep(
+    routes: SavedAiRoute[],
+    routeId: string,
+    stepId: string,
+    patch: Partial<SavedRouteStep>
+): SavedAiRoute[] {
+    const updatedAt = new Date().toISOString();
+
+    return routes.map((route) =>
+        route.id === routeId
+            ? {
+                ...route,
+                updatedAt,
+                steps: route.steps.map((step) =>
+                    step.id === stepId ? { ...step, ...patch } : step
+                ),
+            }
+            : route
+    );
+}
+
+function getStoredSavedRoutes(userId: string): SavedAiRoute[] {
+    try {
+        const storedValue = window.localStorage.getItem(getSavedRouteStorageKey(userId));
+        if (!storedValue) return [];
+
+        const parsedValue: unknown = JSON.parse(storedValue);
+        if (!Array.isArray(parsedValue)) return [];
+
+        return parsedValue.filter(isSavedAiRoute).slice(0, maxSavedRoutes);
+    } catch (error) {
+        console.warn("保存済みAIルートを読み込めませんでした", error);
+        return [];
+    }
+}
+
+function saveStoredSavedRoutes(userId: string, routes: SavedAiRoute[]): SavedAiRoute[] {
+    const nextRoutes = routes.slice(0, maxSavedRoutes);
+
+    try {
+        window.localStorage.setItem(
+            getSavedRouteStorageKey(userId),
+            JSON.stringify(nextRoutes)
+        );
+    } catch (error) {
+        console.warn("保存済みAIルートを保存できませんでした", error);
+    }
+
+    return nextRoutes;
+}
+
+function getSavedRouteStorageKey(userId: string): string {
+    return `${savedRouteStorageKeyPrefix}.${userId}`;
+}
+
+function isSavedAiRoute(value: unknown): value is SavedAiRoute {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        typeof value.title === "string" &&
+        typeof value.summary === "string" &&
+        typeof value.matchScore === "number" &&
+        Array.isArray(value.steps) &&
+        value.steps.every(isSavedRouteStep) &&
+        typeof value.createdAt === "string" &&
+        typeof value.updatedAt === "string"
+    );
+}
+
+function isSavedRouteStep(value: unknown): value is SavedRouteStep {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        isSavedRouteItem(value.fromItem) &&
+        isSavedRouteItem(value.toItem) &&
+        isSavedRouteStepStatus(value.status) &&
+        (value.tradeRequestId === undefined || typeof value.tradeRequestId === "string") &&
+        (value.requestedAt === undefined || typeof value.requestedAt === "string") &&
+        (value.updatedAt === undefined || typeof value.updatedAt === "string")
+    );
+}
+
+function isSavedRouteItem(value: unknown): value is Item {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        typeof value.title === "string" &&
+        typeof value.ownerId === "string" &&
+        typeof value.ownerName === "string" &&
+        typeof value.imageUrl === "string" &&
+        typeof value.price === "number"
+    );
+}
+
+function isSavedRouteStepStatus(value: unknown): value is SavedRouteStepStatus {
+    return (
+        value === "ready" ||
+        value === "requested" ||
+        value === "approved" ||
+        value === "completed"
+    );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getNextSavedRouteStepStatus(
+    status: SavedRouteStepStatus
+): SavedRouteStepStatus | undefined {
+    if (status === "requested") return "approved";
+    if (status === "approved") return "completed";
+
+    return undefined;
+}
+
+function getSavedRouteStepStatusLabel(status: SavedRouteStepStatus): string {
+    if (status === "requested") return "申請済み";
+    if (status === "approved") return "承認済み";
+    if (status === "completed") return "完了";
+
+    return "未申請";
+}
+
+function getSavedRouteStepActionLabel(status: SavedRouteStepStatus): string | undefined {
+    if (status === "ready") return "交換申請を送る";
+    if (status === "requested") return "承認済みにする";
+    if (status === "approved") return "完了にする";
+
+    return undefined;
+}
+
+function getSavedRouteCompletedCount(route: SavedAiRoute): number {
+    return route.steps.filter((step) => step.status === "completed").length;
+}
+
+function formatSavedRouteDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "日時不明";
+
+    return new Intl.DateTimeFormat("ja-JP", {
+        month: "numeric",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(date);
 }
 
 function getRouteStepLabel(index: number, length: number): string {
