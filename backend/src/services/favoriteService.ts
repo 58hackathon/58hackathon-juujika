@@ -2,6 +2,7 @@ import type {
   CreateFavoriteInput,
   DeleteFavoriteInput,
   Favorite,
+  FavoriteScope,
 } from "../models/favorite.js";
 
 const favoritesCollectionName = "favorites";
@@ -35,7 +36,10 @@ export class FavoriteServiceError extends Error {
   }
 }
 
-export async function getFavorites(userId: string): Promise<Favorite[]> {
+export async function getFavorites(
+  userId: string,
+  scope: FavoriteScope = "market"
+): Promise<Favorite[]> {
   const rows = await requestFirestore<FirestoreRunQueryResponse>(
     ":runQuery",
     {
@@ -59,6 +63,7 @@ export async function getFavorites(userId: string): Promise<Favorite[]> {
     .map((row) => row.document)
     .filter((document): document is FirestoreDocument => document !== undefined)
     .map(toFavorite)
+    .filter((favorite) => favorite.scope === scope)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
@@ -66,9 +71,10 @@ export async function createFavorite(
   input: CreateFavoriteInput
 ): Promise<Favorite> {
   const favorite: Favorite = {
-    id: createFavoriteDocumentId(input.userId, input.itemId),
+    id: createFavoriteDocumentId(input.userId, input.itemId, input.scope),
     userId: input.userId,
     itemId: input.itemId,
+    scope: input.scope,
     createdAt: new Date().toISOString(),
   };
 
@@ -86,7 +92,7 @@ export async function createFavorite(
 export async function deleteFavorite(
   input: DeleteFavoriteInput
 ): Promise<boolean> {
-  const id = createFavoriteDocumentId(input.userId, input.itemId);
+  const id = createFavoriteDocumentId(input.userId, input.itemId, input.scope);
 
   try {
     await requestFirestore<Record<string, never>>(`/${favoritesCollectionName}/${id}`, {
@@ -157,6 +163,7 @@ function toFirestoreDocument(favorite: Favorite): FirestoreDocument {
     fields: {
       userId: { stringValue: favorite.userId },
       itemId: { stringValue: favorite.itemId },
+      scope: { stringValue: favorite.scope },
       createdAt: { timestampValue: favorite.createdAt },
     },
   };
@@ -169,12 +176,18 @@ function toFavorite(document: FirestoreDocument): Favorite {
     id: getDocumentId(document.name ?? ""),
     userId: getStringValue(fields.userId),
     itemId: getStringValue(fields.itemId),
+    scope: getFavoriteScopeValue(fields.scope),
     createdAt: getTimestampValue(fields.createdAt),
   };
 }
 
-function createFavoriteDocumentId(userId: string, itemId: string): string {
-  return `${toSafeDocumentId(userId)}_${toSafeDocumentId(itemId)}`;
+function createFavoriteDocumentId(
+  userId: string,
+  itemId: string,
+  scope: FavoriteScope
+): string {
+  const baseId = `${toSafeDocumentId(userId)}_${toSafeDocumentId(itemId)}`;
+  return scope === "market" ? baseId : `${baseId}_${toSafeDocumentId(scope)}`;
 }
 
 function toSafeDocumentId(value: string): string {
@@ -187,6 +200,10 @@ function getDocumentId(name: string): string {
 
 function getStringValue(value: FirestoreValue | undefined): string {
   return value?.stringValue ?? "";
+}
+
+function getFavoriteScopeValue(value: FirestoreValue | undefined): FavoriteScope {
+  return value?.stringValue === "ai_warehouse" ? "ai_warehouse" : "market";
 }
 
 function getTimestampValue(value: FirestoreValue | undefined): string {

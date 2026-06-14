@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import type {
   CreateFavoriteInput,
   DeleteFavoriteInput,
+  FavoriteScope,
 } from "../models/favorite.js";
 import {
   createFavorite,
@@ -20,12 +21,14 @@ export async function listFavorites(
     res.status(400).json({ error: "userId is required" });
     return;
   }
+  const scope = getFavoriteScope(req.query.scope);
 
   try {
-    const favorites = await getFavorites(userId);
+    const favorites = await getFavorites(userId, scope);
     res.json({
       data: favorites,
       itemIds: favorites.map((favorite) => favorite.itemId),
+      scope,
     });
   } catch (error) {
     respondFavoriteError(error, res);
@@ -83,7 +86,9 @@ function toCreateFavoriteInput(value: unknown): CreateFavoriteInput | string {
     return "itemId is required";
   }
 
-  return { userId, itemId };
+  const scope = getFavoriteScope(value.scope);
+
+  return { userId, itemId, scope };
 }
 
 function toDeleteFavoriteInput(req: Request): DeleteFavoriteInput | string {
@@ -97,7 +102,9 @@ function toDeleteFavoriteInput(req: Request): DeleteFavoriteInput | string {
     return "itemId is required";
   }
 
-  return { userId, itemId };
+  const scope = getFavoriteScope(req.query.scope);
+
+  return { userId, itemId, scope };
 }
 
 function respondFavoriteError(error: unknown, res: Response): void {
@@ -127,6 +134,10 @@ function getQueryParam(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== ""
     ? value.trim()
     : undefined;
+}
+
+function getFavoriteScope(value: unknown): FavoriteScope {
+  return value === "ai_warehouse" ? "ai_warehouse" : "market";
 }
 
 function getRouteParam(value: string | string[] | undefined): string | undefined {

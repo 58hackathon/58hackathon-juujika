@@ -26,10 +26,10 @@ Backend suggestion service
 
 ```txt
 開始商品 / sourceItem
-  交換ルートの出発点。AI倉庫の商品から選ぶ。
+  交換ルートの出発点。自分が出品し、AI倉庫に保存した商品から選ぶ。
 
 到達したい商品 / goalItem
-  ルートの目的地。現在はお気に入り登録済みの商品だけが候補になる。
+  ルートの目的地。AI倉庫内でお気に入り登録した商品だけが候補になる。
 
 候補商品 / candidateItem
   AIが次の交換先として評価する商品。原則として AI倉庫の商品。
@@ -54,12 +54,12 @@ AI提案画面には2つのモードがあります。
   ユーザーは「ルートに追加」「別候補を見る」「ルートを保存」を選ぶ。
 
 オートモード
-  自動交換の監視UI。
-  現状は候補表示、進行ログ、一時停止/再開のUIが中心。
-  実際の完全自動申請エンジンは今後の拡張余地。
+  AIがルートを生成し、交換申請、承認、完了までを順番に自動実行する。
+  実行中のステップ、進行ログ、一時停止/再開、リセットを持つ。
+  実行状態は localStorage に保存される。
 ```
 
-到達したい商品は `favoriteItemIds` から作るため、ユーザーがお気に入りにした商品だけがゴール候補になります。この制約は「本当に欲しい商品」へルートを作るためのフィルタです。
+到達したい商品は `aiWarehouseFavoriteItemIds` から作るため、AI倉庫カードでお気に入り登録した商品だけがゴール候補になります。通常出品の `market` お気に入りは参照しません。この制約は「AI倉庫に保存した候補の中で本当に欲しい商品」へルートを作るためのフィルタです。
 
 ## フロントエンドのデータフロー
 
@@ -70,30 +70,33 @@ AI提案画面には2つのモードがあります。
 ```txt
 getItems()
   -> items
+  -> 自分のAI倉庫商品だけにfilter
   -> warehouseItems
   -> sourceItems / candidates
 ```
 
-AI倉庫の判定は現状この条件です。
+開始商品として表示するAI倉庫商品の条件は現状この形です。
 
 ```ts
 item.listingType === "warehouse" &&
-item.warehouseUseCase === "ai_route"
+item.warehouseUseCase === "ai_route" &&
+isCurrentUserResource(item.ownerId, currentUser.id)
 ```
 
 注意: 一部の実装では `warehouseUseCases` という複数用途配列も使われています。AI提案画面は現時点で単数の `warehouseUseCase` を見ているため、完全に複数用途対応へ寄せる場合は `isAiWarehouseItem()` と `aiProposalApi.ts` の candidate filter を合わせて変更してください。
 
 ### 2. ゴール候補の作成
 
-ゴール候補は全商品ではなく、お気に入り済み商品から作ります。
+ゴール候補は全商品ではなく、AI倉庫scopeでお気に入り済みの商品から作ります。
 
 ```txt
-items + favoriteItemIds
+items + aiWarehouseFavoriteItemIds
+  -> AI倉庫商品だけにfilter
   -> favoriteGoalItems
   -> guidedGoalItems / autoGoalItems
 ```
 
-選択済みのゴールがあとからお気に入り解除された場合は、`useEffect` で未選択に戻します。
+選択済みのゴールがあとからAI倉庫お気に入り解除された場合は、`useEffect` で未選択に戻します。
 
 ### 3. AIルート取得
 
@@ -134,7 +137,7 @@ input.items
   .filter((item) => item.status === "available")
 ```
 
-その後、`goalItemId` と一致する候補があれば先頭に寄せます。ただし、ゴール商品が通常出品で AI倉庫ではない場合、backend の `candidateItems` には入りません。現状の Gemini 評価は「source と AI倉庫候補の相性」を主に見ており、goal は frontend の route 表示や mock route 生成で強く効きます。
+その後、`goalItemId` と一致する候補があれば先頭に寄せます。ゴール商品もAI倉庫お気に入りから選ぶため、backend の `candidateItems` と同じ倉庫ドメインに揃います。現状の Gemini 評価は「source と AI倉庫候補の相性」を主に見ており、goal は frontend の route 表示や mock route 生成でも強く効きます。
 
 ### レスポンス変換
 
@@ -419,30 +422,56 @@ message:
 {fromItem.title}との交換を希望しています。AI提案ルートの次ステップとして申請しました。
 ```
 
-現在の frontend `tradeRequestApi.ts` はローカル fallback 中心です。backend API と完全同期したい場合は、`createTradeRequest()` と `updateTradeRequestStatus()` を `/api/trade-requests` に接続する必要があります。
+現在の frontend `tradeRequestApi.ts` は `/api/trade-requests` を優先して呼び、接続できない場合だけローカル fallback に切り替えます。オートモードの自動申請、承認、完了処理もこの API adapter を通ります。
 
-## オートモードの現状
+## オートモードの自動実行モデル
 
-オートモードは UI と状態モデルが先行しています。
+オートモードは、フロントエンド内に `AutoRun` という実行モデルを持ちます。開始ボタンを押すと、AIルートから自動実行プランを作り、各ステップを順番に処理します。
 
 実装済み:
 
 - 目標商品選択
 - 開始商品選択
-- 候補表示
-- 高額候補の通知文
+- AIルートから自動実行ステップを生成
+- `queued -> requested -> approved -> completed` の自動遷移
+- `createTradeRequest()` による交換申請作成
+- `updateTradeRequestStatus()` による承認・完了処理
+- 実行ログ保存
 - 一時停止 / 再開
-- 進行ログ表示
+- リセット
+- 高額候補の通知文
+- localStorage への実行状態保存
 
-未実装またはモック寄り:
+現状の責務:
 
-- 実際の自動申請キュー
+```txt
+AutoRun
+  1回の完全自動交換セッション。
+
+AutoRunStep
+  fromItem -> toItem の1交換。
+
+AutoRunLog
+  自動処理の監査ログ。
+```
+
+保存先:
+
+```txt
+warashibe.autoAiRun.{userId}
+```
+
+現在の自動実行はブラウザ上で動きます。ページを閉じても状態は復元できますが、バックグラウンドで処理を継続するサーバージョブではありません。
+
+専門家向けにさらに本番化するなら、backend に `automationJobs` のような永続モデルを置き、キュー/ワーカー/イベント購読へ移すのが自然です。
+
+未実装または今後の拡張:
+
+- サーバーサイドの自動申請キュー
 - 申請上限の永続管理
-- 高額検知時の通知送信
-- バックグラウンドジョブ
+- 高額検知時の外部通知送信
+- バックグラウンドワーカー
 - 承認/却下の実イベント購読
-
-専門家向けに本番化するなら、オートモードは frontend state だけで完結させず、backend に `automationJobs` のような永続モデルを置くのが自然です。
 
 ## エラー処理と信頼境界
 
@@ -543,7 +572,7 @@ backend fallback score を変える
   frontend/src/screens/AiProposalScreen.tsx
   SavedAiRoute / SavedRouteStep / isSavedAiRoute()
 
-オートモードを本番化する
+オートモードをサーバー実行化する
   frontend/src/screens/AiProposalScreen.tsx
   backend に自動申請ジョブモデルを追加
 ```
@@ -569,13 +598,16 @@ npm run ai:check
 
 画面確認:
 
-1. 商品一覧で欲しい商品をお気に入りにする
+1. 商品一覧のAI候補タブで欲しいAI倉庫商品をお気に入りにする
 2. AI提案へ移動する
 3. 開始商品にAI倉庫の商品を選ぶ
-4. 到達したい商品にお気に入り商品だけが出ることを確認する
+4. 到達したい商品にAI倉庫内でお気に入り登録した商品だけが出ることを確認する
 5. 候補をルートに追加する
 6. ルートを保存する
 7. 保存済みルートから交換申請を送る
+8. オートモードで開始商品と目標を選ぶ
+9. 「完全自動で開始」を押す
+10. 交換申請、承認、完了ログが順に増えることを確認する
 
 API単体確認:
 
@@ -609,6 +641,6 @@ curl -X POST http://localhost:3000/api/trade-requests/suggestions \
 
 - `goalItem` は frontend のルート表示に強く効く一方、backend Gemini prompt には明示的に渡っていません。
 - `warehouseUseCase` と `warehouseUseCases` の表現が混在しつつあります。AI提案画面は現状 `warehouseUseCase` を見ます。
-- オートモードは現時点では本番自動実行エンジンではなく、UI・状態モデル・候補表示が中心です。
+- オートモードはブラウザ上の自動実行エンジンとして動きます。サーバー側の常駐ワーカーやジョブキューは未実装です。
 - saved route は localStorage 保存なので、端末をまたいだ同期はありません。
 - Gemini が使えない時も fallback / mock で動くため、見た目だけでは Gemini 経由か判断しにくいです。`source` を表示するとデバッグしやすくなります。

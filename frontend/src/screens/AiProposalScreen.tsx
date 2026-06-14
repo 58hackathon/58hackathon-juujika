@@ -1,20 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getAiTradeRoutes } from "../features/aiProposals/aiProposalApi";
 import type { AiTradeRoute } from "../features/aiProposals/aiProposalTypes";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import { createTradeRequest, updateTradeRequestStatus } from "../features/tradeRequests/tradeRequestApi";
+import { isCurrentUserResource } from "../features/users/currentUser";
 import type { RegisteredUser } from "../features/users/userTypes";
 import "./AiProposalScreen.css";
 
 type AiProposalScreenProps = {
     currentUser: RegisteredUser;
-    favoriteItemIds: string[];
+    aiWarehouseFavoriteItemIds: string[];
 };
 
 type AiMode = "guided" | "auto";
-type AutoStatus = "running" | "paused";
+type AutoStatus = "idle" | "running" | "paused" | "completed" | "blocked";
 type SavedRouteStepStatus = "ready" | "requested" | "approved" | "completed";
+type AutoRunStepStatus = "queued" | "requested" | "approved" | "completed";
+type AutoRunLogLevel = "info" | "success" | "warning";
 
 type SavedRouteStep = {
     id: string;
@@ -37,11 +40,53 @@ type SavedAiRoute = {
     updatedAt: string;
 };
 
+type AutoRunStep = {
+    id: string;
+    fromItem: Item;
+    toItem: Item;
+    status: AutoRunStepStatus;
+    reason: string;
+    tradeRequestId?: string;
+    requestedAt?: string;
+    approvedAt?: string;
+    completedAt?: string;
+    updatedAt?: string;
+};
+
+type AutoRunLog = {
+    id: string;
+    at: string;
+    level: AutoRunLogLevel;
+    message: string;
+};
+
+type AutoRun = {
+    id: string;
+    title: string;
+    summary: string;
+    matchScore: number;
+    source: AiTradeRoute["source"] | "manual";
+    sourceItem: Item;
+    goalItem: Item;
+    currentItem: Item;
+    activeStepIndex: number;
+    steps: AutoRunStep[];
+    logs: AutoRunLog[];
+    createdAt: string;
+    updatedAt: string;
+};
+
 const fallbackImageUrl = "/images/demo/generated/reading-card-500.png";
 const savedRouteStorageKeyPrefix = "warashibe.savedAiRoutes";
+const autoRunStorageKeyPrefix = "warashibe.autoAiRun";
 const maxSavedRoutes = 8;
+const maxAutoRunLogs = 24;
+const autoStepDelayMs = 680;
 
-function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProps) {
+function AiProposalScreen({
+    currentUser,
+    aiWarehouseFavoriteItemIds,
+}: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [mode, setMode] = useState<AiMode>("guided");
     const [guidedSourceItemId, setGuidedSourceItemId] = useState("");
@@ -54,7 +99,12 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
     const [autoAiRoutes, setAutoAiRoutes] = useState<AiTradeRoute[]>([]);
     const [savedRoutes, setSavedRoutes] = useState<SavedAiRoute[]>([]);
     const [requestingStepId, setRequestingStepId] = useState("");
-    const [autoStatus, setAutoStatus] = useState<AutoStatus>("running");
+    const [autoRun, setAutoRun] = useState<AutoRun | undefined>();
+    const [autoStatus, setAutoStatus] = useState<AutoStatus>("idle");
+    const [isAutoProcessing, setIsAutoProcessing] = useState(false);
+    const autoRunRef = useRef<AutoRun | undefined>(undefined);
+    const autoStatusRef = useRef<AutoStatus>("idle");
+    const isMountedRef = useRef(true);
 
     useEffect(() => {
         const loadItems = async () => {
@@ -66,22 +116,39 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
     }, []);
 
     useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
         setSavedRoutes(getStoredSavedRoutes(currentUser.id));
     }, [currentUser.id]);
 
-    const warehouseItems = useMemo(() => {
-        const filteredItems = items.filter(
-            (item) => isAiWarehouseItem(item)
-        );
+    useEffect(() => {
+        const storedAutoRun = getStoredAutoRun(currentUser.id);
+        const storedAutoStatus = storedAutoRun ? getStoredAutoRunStatus(storedAutoRun) : "idle";
+        autoRunRef.current = storedAutoRun;
+        autoStatusRef.current = storedAutoStatus;
+        setAutoRun(storedAutoRun);
+        setAutoStatus(storedAutoStatus);
+    }, [currentUser.id]);
 
-        return filteredItems.length > 0 ? filteredItems : items;
-    }, [items]);
+    const warehouseItems = useMemo(() => {
+        return items.filter(
+            (item) =>
+                isAiWarehouseItem(item) &&
+                isCurrentUserResource(item.ownerId, currentUser.id)
+        );
+    }, [currentUser.id, items]);
 
     const favoriteGoalItems = useMemo(() => {
-        const favoriteItemIdSet = new Set(favoriteItemIds);
+        const favoriteItemIdSet = new Set(aiWarehouseFavoriteItemIds);
 
-        return items.filter((item) => favoriteItemIdSet.has(item.id));
-    }, [favoriteItemIds, items]);
+        return items.filter(
+            (item) => isAiWarehouseItem(item) && favoriteItemIdSet.has(item.id)
+        );
+    }, [aiWarehouseFavoriteItemIds, items]);
 
     const guidedGoalItems = favoriteGoalItems.filter((item) => item.id !== guidedSourceItemId);
     const guidedSourceItem = findItem(items, guidedSourceItemId);
@@ -107,6 +174,22 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
             setAutoGoalItemId("");
         }
     }, [autoGoalItemId, favoriteGoalItems, guidedGoalItemId]);
+
+    useEffect(() => {
+        if (
+            guidedSourceItemId &&
+            !warehouseItems.some((item) => item.id === guidedSourceItemId)
+        ) {
+            handleGuidedSourceChange("");
+        }
+
+        if (
+            autoSourceItemId &&
+            !warehouseItems.some((item) => item.id === autoSourceItemId)
+        ) {
+            handleAutoSourceChange("");
+        }
+    }, [autoSourceItemId, guidedSourceItemId, warehouseItems]);
 
     useEffect(() => {
         if (!guidedSourceItemId || !guidedGoalItemId || items.length === 0) {
@@ -221,10 +304,44 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
             autoGoalItem ??
             autoSourceItem
             : undefined;
+    const autoRouteItems = buildAutoRouteItems(
+        items,
+        autoSourceItem,
+        autoGoalItem,
+        autoAiRoute,
+        autoCandidate
+    );
     const highValueNotice =
         autoCandidate !== undefined && autoCandidate.price >= 10000
             ? `${autoCandidate.title}は高額商品として検知済みです。通知だけ行い、自動交換は継続します。`
             : "高額商品を検知した場合も、通知だけ行って自動交換は継続します。";
+    const canStartAutoMode =
+        Boolean(autoSourceItem && autoGoalItem) &&
+        autoRouteItems.length >= 2 &&
+        autoStatus !== "running" &&
+        !isAutoProcessing;
+
+    const resetAutoRun = () => {
+        clearStoredAutoRun(currentUser.id);
+        autoRunRef.current = undefined;
+        autoStatusRef.current = "idle";
+        setAutoRun(undefined);
+        setAutoStatus("idle");
+        setIsAutoProcessing(false);
+    };
+
+    const updateAutoRun = (updater: (currentRun: AutoRun) => AutoRun) => {
+        if (!isMountedRef.current) return;
+
+        setAutoRun((currentRun) => {
+            if (!currentRun) return currentRun;
+
+            const nextRun = updater(currentRun);
+            saveStoredAutoRun(currentUser.id, nextRun);
+            autoRunRef.current = nextRun;
+            return nextRun;
+        });
+    };
 
     const handleGuidedSourceChange = (itemId: string) => {
         setGuidedSourceItemId(itemId);
@@ -245,10 +362,41 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
         if (itemId === autoGoalItemId) {
             setAutoGoalItemId("");
         }
+        resetAutoRun();
     };
 
     const handleAutoGoalChange = (itemId: string) => {
         setAutoGoalItemId(itemId);
+        resetAutoRun();
+    };
+
+    const handleStartAutoMode = () => {
+        if (!autoSourceItem || !autoGoalItem || autoRouteItems.length < 2) {
+            autoStatusRef.current = "blocked";
+            setAutoStatus("blocked");
+            return;
+        }
+
+        const nextAutoRun = createAutoRun(autoRouteItems, autoAiRoute);
+        saveStoredAutoRun(currentUser.id, nextAutoRun);
+        autoRunRef.current = nextAutoRun;
+        autoStatusRef.current = "running";
+        setAutoRun(nextAutoRun);
+        setAutoStatus("running");
+        setIsAutoProcessing(false);
+    };
+
+    const handleToggleAutoStatus = () => {
+        setAutoStatus((currentStatus) => {
+            const nextStatus =
+                currentStatus === "running"
+                    ? "paused"
+                    : currentStatus === "paused"
+                        ? "running"
+                        : currentStatus;
+            autoStatusRef.current = nextStatus;
+            return nextStatus;
+        });
     };
 
     const handleAcceptProposal = () => {
@@ -340,6 +488,159 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
         );
     };
 
+    useEffect(() => {
+        if (autoStatus !== "running" || !autoRun || isAutoProcessing) return;
+
+        const activeStep = autoRun.steps.find((step) => step.status !== "completed");
+        if (!activeStep) {
+            updateAutoRun((currentRun) =>
+                appendAutoRunLog(
+                    {
+                        ...currentRun,
+                        activeStepIndex: currentRun.steps.length,
+                        currentItem: currentRun.goalItem,
+                        updatedAt: new Date().toISOString(),
+                    },
+                    `${autoRun.goalItem.title}までの自動交換が完了しました。`,
+                    "success"
+                )
+            );
+            autoStatusRef.current = "completed";
+            setAutoStatus("completed");
+            return;
+        }
+
+        const isSameAutoRun = () =>
+            isMountedRef.current && autoRunRef.current?.id === autoRun.id;
+        const canContinueAutoRun = () =>
+            isSameAutoRun() && autoStatusRef.current === "running";
+
+        const processAutoStep = async () => {
+            setIsAutoProcessing(true);
+
+            try {
+                let tradeRequestId = activeStep.tradeRequestId;
+
+                if (activeStep.status === "queued") {
+                    const tradeRequest = await createTradeRequest({
+                        targetItemId: activeStep.toItem.id,
+                        targetItemTitle: activeStep.toItem.title,
+                        offeredItemId: activeStep.fromItem.id,
+                        offeredItemTitle: activeStep.fromItem.title,
+                        requesterId: currentUser.id,
+                        requesterName: currentUser.username,
+                        receiverId: activeStep.toItem.ownerId,
+                        receiverName: activeStep.toItem.ownerName,
+                        message: `${activeStep.fromItem.title}との交換を希望しています。AIオートモードが目的商品へのルートとして自動申請しました。`,
+                    });
+
+                    tradeRequestId = tradeRequest.id;
+                    if (!isSameAutoRun()) return;
+
+                    updateAutoRun((currentRun) =>
+                        appendAutoRunLog(
+                            updateAutoRunStep(currentRun, activeStep.id, {
+                                status: "requested",
+                                tradeRequestId: tradeRequest.id,
+                                requestedAt: tradeRequest.createdAt,
+                                updatedAt: tradeRequest.createdAt,
+                            }),
+                            `${activeStep.fromItem.title}から${activeStep.toItem.title}への交換申請を自動作成しました。`
+                        )
+                    );
+
+                    await wait(autoStepDelayMs);
+                    if (!canContinueAutoRun()) return;
+                }
+
+                if (!tradeRequestId) {
+                    throw new Error("Auto trade request id is missing");
+                }
+
+                if (activeStep.status === "queued" || activeStep.status === "requested") {
+                    if (!canContinueAutoRun()) return;
+                    await updateTradeRequestStatus(tradeRequestId, "approved");
+                    if (!isSameAutoRun()) return;
+
+                    const approvedAt = new Date().toISOString();
+                    updateAutoRun((currentRun) =>
+                        appendAutoRunLog(
+                            updateAutoRunStep(currentRun, activeStep.id, {
+                                status: "approved",
+                                approvedAt,
+                                updatedAt: approvedAt,
+                            }),
+                            `${activeStep.toItem.title}への交換が承認済みになりました。`,
+                            "success"
+                        )
+                    );
+
+                    await wait(autoStepDelayMs);
+                    if (!canContinueAutoRun()) return;
+                }
+
+                if (!canContinueAutoRun()) return;
+                await updateTradeRequestStatus(tradeRequestId, "completed");
+                if (!isSameAutoRun()) return;
+
+                const completedAt = new Date().toISOString();
+                const isFinalStep =
+                    autoRun.steps[autoRun.steps.length - 1]?.id === activeStep.id;
+
+                updateAutoRun((currentRun) =>
+                    appendAutoRunLog(
+                        updateAutoRunStep(currentRun, activeStep.id, {
+                            status: "completed",
+                            completedAt,
+                            updatedAt: completedAt,
+                        }, {
+                            activeStepIndex: Math.min(
+                                currentRun.activeStepIndex + 1,
+                                currentRun.steps.length
+                            ),
+                            currentItem: activeStep.toItem,
+                        }),
+                        isFinalStep
+                            ? `${activeStep.toItem.title}へ到達しました。自動交換ルートは完了です。`
+                            : `${activeStep.toItem.title}を取得しました。次の候補探索へ進みます。`,
+                        isFinalStep ? "success" : "info"
+                    )
+                );
+
+                if (isFinalStep) {
+                    autoStatusRef.current = "completed";
+                    setAutoStatus("completed");
+                }
+            } catch (error) {
+                console.warn("AIオートモードの自動実行に失敗しました", error);
+
+                if (isSameAutoRun()) {
+                    updateAutoRun((currentRun) =>
+                        appendAutoRunLog(
+                            currentRun,
+                            "自動交換の実行中にエラーが発生しました。条件を見直して再開してください。",
+                            "warning"
+                        )
+                    );
+                    autoStatusRef.current = "blocked";
+                    setAutoStatus("blocked");
+                }
+            } finally {
+                if (isMountedRef.current) {
+                    setIsAutoProcessing(false);
+                }
+            }
+        };
+
+        void processAutoStep();
+    }, [
+        autoRun,
+        autoStatus,
+        currentUser.id,
+        currentUser.username,
+        isAutoProcessing,
+    ]);
+
     return (
         <section className="ai-proposal-screen">
             <header className="ai-proposal-screen__header">
@@ -395,18 +696,20 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
                 <AutoMode
                     aiRoute={autoAiRoute}
                     autoCandidate={autoCandidate}
+                    autoRouteItems={autoRouteItems}
+                    autoRun={autoRun}
                     autoStatus={autoStatus}
+                    canStartAutoMode={canStartAutoMode}
                     currentUser={currentUser}
                     goalItem={autoGoalItem}
                     goalItems={autoGoalItems}
                     highValueNotice={highValueNotice}
+                    isAutoProcessing={isAutoProcessing}
                     onChangeGoal={handleAutoGoalChange}
                     onChangeSource={handleAutoSourceChange}
-                    onToggleAutoStatus={() =>
-                        setAutoStatus((currentStatus) =>
-                            currentStatus === "running" ? "paused" : "running"
-                        )
-                    }
+                    onResetAutoRun={resetAutoRun}
+                    onStartAutoMode={handleStartAutoMode}
+                    onToggleAutoStatus={handleToggleAutoStatus}
                     sourceItem={autoSourceItem}
                     sourceItems={warehouseItems}
                 />
@@ -734,174 +1037,232 @@ function SavedRouteStepProduct({ item, label }: { item: Item; label: string }) {
 function AutoMode({
     aiRoute,
     autoCandidate,
+    autoRouteItems,
+    autoRun,
     autoStatus,
+    canStartAutoMode,
     currentUser,
     goalItem,
     goalItems,
     highValueNotice,
+    isAutoProcessing,
     onChangeGoal,
     onChangeSource,
+    onResetAutoRun,
+    onStartAutoMode,
     onToggleAutoStatus,
     sourceItem,
     sourceItems,
 }: {
     aiRoute: AiTradeRoute | undefined;
     autoCandidate: Item | undefined;
+    autoRouteItems: Item[];
+    autoRun: AutoRun | undefined;
     autoStatus: AutoStatus;
+    canStartAutoMode: boolean;
     currentUser: RegisteredUser;
     goalItem: Item | undefined;
     goalItems: Item[];
     highValueNotice: string;
+    isAutoProcessing: boolean;
     onChangeGoal: (itemId: string) => void;
     onChangeSource: (itemId: string) => void;
+    onResetAutoRun: () => void;
+    onStartAutoMode: () => void;
     onToggleAutoStatus: () => void;
     sourceItem: Item | undefined;
     sourceItems: Item[];
 }) {
     const isPaused = autoStatus === "paused";
+    const activeStep = autoRun?.steps.find((step) => step.status !== "completed");
+    const displayedCandidate = activeStep?.toItem ?? autoCandidate;
+    const displayedRouteItems = autoRun ? buildAutoRunRouteItems(autoRun) : autoRouteItems;
     const monitorScore =
-        aiRoute?.matchScore ?? (autoCandidate && autoCandidate.price >= 10000 ? 64 : 71);
+        autoRun?.matchScore ??
+        aiRoute?.matchScore ??
+        (displayedCandidate && displayedCandidate.price >= 10000 ? 64 : 71);
     const autoCandidateSummary =
+        activeStep?.reason ??
+        autoRun?.summary ??
         aiRoute?.summary ??
         `${goalItem?.title ?? "目的の商品"}への到達前に価値を上げる候補として申請済みです。`;
+    const toggleLabel = autoStatus === "paused" ? "再開" : "一時停止";
+    const canToggleAutoStatus = autoStatus === "running" || autoStatus === "paused";
+    const startButtonLabel =
+        autoStatus === "completed"
+            ? "新しい自動交換を開始"
+            : autoRun
+                ? "ルートを再生成して開始"
+                : "完全自動で開始";
 
     return (
-        <section className="ai-auto-layout">
-            <aside className="ai-auto-settings">
-                <p>自動交換の条件</p>
-                <h2>AIに任せる範囲</h2>
+        <>
+            <section className="ai-auto-layout">
+                <aside className="ai-auto-settings">
+                    <p>自動交換の条件</p>
+                    <h2>AIに任せる範囲</h2>
 
-                <label>
-                    <span>目標</span>
-                    <select
-                        onChange={(event) => onChangeGoal(event.target.value)}
-                        value={goalItem?.id ?? ""}
-                    >
-                        <option value=""></option>
-                        {goalItems.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.title}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                    <label>
+                        <span>開始商品</span>
+                        <select
+                            disabled={autoStatus === "running" || isAutoProcessing}
+                            onChange={(event) => onChangeSource(event.target.value)}
+                            value={sourceItem?.id ?? ""}
+                        >
+                            <option value=""></option>
+                            {sourceItems.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                    {item.title}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
 
-                <label>
-                    <span>開始商品</span>
-                    <select
-                        onChange={(event) => onChangeSource(event.target.value)}
-                        value={sourceItem?.id ?? ""}
-                    >
-                        <option value=""></option>
-                        {sourceItems.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.title}
-                            </option>
-                        ))}
-                    </select>
-                </label>
+                    <label>
+                        <span>目標</span>
+                        <select
+                            disabled={autoStatus === "running" || isAutoProcessing}
+                            onChange={(event) => onChangeGoal(event.target.value)}
+                            value={goalItem?.id ?? ""}
+                        >
+                            <option value=""></option>
+                            {goalItems.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                    {item.title}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
 
-                <div className="ai-setting-list">
-                    <div>
-                        <span>価格差</span>
-                        <strong>±20%</strong>
-                    </div>
-                    <div>
-                        <span>申請上限</span>
-                        <strong>1日5件</strong>
-                    </div>
-                    <div>
-                        <span>高額検知</span>
-                        <strong>通知のみ</strong>
-                    </div>
-                    <div>
-                        <span>停止条件</span>
-                        <strong>手動停止のみ</strong>
-                    </div>
-                    <div>
-                        <span>プラン</span>
-                        <strong>{currentUser.plan === "free" ? "Plus想定" : currentUser.plan}</strong>
-                    </div>
-                </div>
-
-                <div className="ai-auto-notice">
-                    {highValueNotice}
-                </div>
-
-                <div className="ai-action-row">
-                    <button className="ai-primary-button" type="button">
-                        開始
-                    </button>
-                </div>
-            </aside>
-
-            <div className="ai-auto-monitor-stack">
-                <section className="ai-monitor-card">
-                    <div className={isPaused ? "ai-status-band ai-status-band--paused" : "ai-status-band"}>
+                    <div className="ai-setting-list">
                         <div>
-                            <p>自動交換</p>
-                            <strong>{isPaused ? "手動停止中" : "承認待ち"}</strong>
+                            <span>実行方式</span>
+                            <strong>全自動</strong>
                         </div>
-                        <button className="ai-status-band__button" onClick={onToggleAutoStatus} type="button">
-                            {isPaused ? "再開" : "一時停止"}
+                        <div>
+                            <span>申請予定</span>
+                            <strong>{Math.max(displayedRouteItems.length - 1, 0)}件</strong>
+                        </div>
+                        <div>
+                            <span>高額検知</span>
+                            <strong>通知のみ</strong>
+                        </div>
+                        <div>
+                            <span>停止条件</span>
+                            <strong>手動停止のみ</strong>
+                        </div>
+                        <div>
+                            <span>プラン</span>
+                            <strong>{currentUser.plan === "free" ? "Plus想定" : currentUser.plan}</strong>
+                        </div>
+                    </div>
+
+                    <div className="ai-auto-notice">
+                        {highValueNotice}
+                    </div>
+
+                    <div className="ai-action-row">
+                        <button
+                            className="ai-primary-button"
+                            disabled={!canStartAutoMode}
+                            onClick={onStartAutoMode}
+                            type="button"
+                        >
+                            {isAutoProcessing ? "実行中..." : startButtonLabel}
                         </button>
-                    </div>
-
-                    <div className="ai-progress-lane" aria-label="自動交換の進行状況">
-                        <span className="ai-progress-lane__step ai-progress-lane__step--active">探索中</span>
-                        <span className="ai-progress-lane__step ai-progress-lane__step--active">申請済み</span>
-                        <span className="ai-progress-lane__step ai-progress-lane__step--active">承認待ち</span>
-                        <span className={isPaused ? "ai-progress-lane__step" : "ai-progress-lane__step ai-progress-lane__step--watching"}>
-                            次候補探索
-                        </span>
-                    </div>
-
-                    <div className="ai-monitor-main">
-                        {autoCandidate && (
-                            <>
-                                <img src={autoCandidate.imageUrl || fallbackImageUrl} alt="" />
-                                <div>
-                                    <p>現在の候補</p>
-                                    <h2>{autoCandidate.title}</h2>
-                                    <span>
-                                        {autoCandidateSummary}
-                                    </span>
-                                </div>
-                                <div className="ai-score-ring ai-score-ring--green" style={{ "--score": `${monitorScore}%` } as React.CSSProperties}>
-                                    {monitorScore}%
-                                </div>
-                            </>
+                        {autoRun && (
+                            <button className="ai-secondary-button" onClick={onResetAutoRun} type="button">
+                                リセット
+                            </button>
                         )}
                     </div>
-                </section>
+                </aside>
 
-                <section className="ai-log-card">
-                    <h2>進行ログ</h2>
-                    <ul>
-                        <li>
-                            <time>10:20</time>
-                            <span>条件に合う倉庫商品を3件検出</span>
-                        </li>
-                        <li>
-                            <time>10:21</time>
-                            <span>{sourceItem?.title ?? "開始商品"}からの交換申請を作成</span>
-                        </li>
-                        <li>
-                            <time>10:22</time>
-                            <span>相手の返答待ちに移行</span>
-                        </li>
-                        <li>
-                            <time>10:24</time>
-                            <span>高額候補を検知。通知のみ行い、自動交換は継続</span>
-                        </li>
-                        <li>
-                            <time>10:25</time>
-                            <span>次候補として{autoCandidate?.title ?? "候補商品"}を監視中</span>
-                        </li>
-                    </ul>
-                </section>
-            </div>
-        </section>
+                <div className="ai-auto-monitor-stack">
+                    <section className="ai-monitor-card">
+                        <div className={isPaused ? "ai-status-band ai-status-band--paused" : "ai-status-band"}>
+                            <div>
+                                <p>自動交換</p>
+                                <strong>{getAutoStatusLabel(autoStatus)}</strong>
+                            </div>
+                            <button
+                                className="ai-status-band__button"
+                                disabled={!canToggleAutoStatus}
+                                onClick={onToggleAutoStatus}
+                                type="button"
+                            >
+                                {toggleLabel}
+                            </button>
+                        </div>
+
+                        <div className="ai-progress-lane" aria-label="自動交換の進行状況">
+                            {autoRun ? (
+                                autoRun.steps.map((step, index) => (
+                                    <span
+                                        className={[
+                                            "ai-progress-lane__step",
+                                            `ai-progress-lane__step--${step.status}`,
+                                            activeStep?.id === step.id ? "ai-progress-lane__step--watching" : "",
+                                        ].filter(Boolean).join(" ")}
+                                        key={step.id}
+                                    >
+                                        {index + 1}. {getAutoRunStepStatusLabel(step.status)}
+                                    </span>
+                                ))
+                            ) : (
+                                <>
+                                    <span className="ai-progress-lane__step ai-progress-lane__step--active">探索</span>
+                                    <span className="ai-progress-lane__step">申請</span>
+                                    <span className="ai-progress-lane__step">承認</span>
+                                    <span className="ai-progress-lane__step">完了</span>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="ai-monitor-main">
+                            {displayedCandidate ? (
+                                <>
+                                    <img src={displayedCandidate.imageUrl || fallbackImageUrl} alt="" />
+                                    <div>
+                                        <p>{activeStep ? "処理中の候補" : "現在の候補"}</p>
+                                        <h2>{displayedCandidate.title}</h2>
+                                        <span>{autoCandidateSummary}</span>
+                                    </div>
+                                    <div className="ai-score-ring ai-score-ring--green" style={{ "--score": `${monitorScore}%` } as React.CSSProperties}>
+                                        {monitorScore}%
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="ai-auto-placeholder">
+                                    <p>開始商品と目標を選ぶと、自動交換ルートを生成できます。</p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
+
+                    <section className="ai-log-card">
+                        <h2>進行ログ</h2>
+                        <ul>
+                            {autoRun && autoRun.logs.length > 0 ? (
+                                autoRun.logs.map((log) => (
+                                    <li className={`ai-log-card__item--${log.level}`} key={log.id}>
+                                        <time>{formatAutoLogTime(log.at)}</time>
+                                        <span>{log.message}</span>
+                                    </li>
+                                ))
+                            ) : (
+                                <li>
+                                    <time>--:--</time>
+                                    <span>条件を選んで開始すると、AIがルート生成から交換申請、承認、完了まで自動で進めます。</span>
+                                </li>
+                            )}
+                        </ul>
+                    </section>
+                </div>
+            </section>
+
+            {displayedRouteItems.length > 0 && <RouteTimeline items={displayedRouteItems} />}
+        </>
     );
 }
 
@@ -963,6 +1324,145 @@ function buildRouteItems(
     }
 
     return routeItems;
+}
+
+function buildAutoRouteItems(
+    items: Item[],
+    sourceItem: Item | undefined,
+    goalItem: Item | undefined,
+    aiRoute: AiTradeRoute | undefined,
+    fallbackCandidate: Item | undefined
+): Item[] {
+    const routeItems: Item[] = [];
+
+    addUniqueRouteItem(routeItems, sourceItem);
+
+    aiRoute?.steps.slice(1).forEach((step) => {
+        addUniqueRouteItem(routeItems, findItem(items, step.itemId));
+    });
+
+    addUniqueRouteItem(routeItems, fallbackCandidate);
+    addUniqueRouteItem(routeItems, goalItem);
+
+    return routeItems;
+}
+
+function addUniqueRouteItem(routeItems: Item[], item: Item | undefined): void {
+    if (!item || routeItems.some((routeItem) => routeItem.id === item.id)) return;
+    routeItems.push(item);
+}
+
+function createAutoRun(
+    routeItems: Item[],
+    aiRoute: AiTradeRoute | undefined
+): AutoRun {
+    const createdAt = new Date().toISOString();
+    const sourceItem = routeItems[0];
+    const goalItem = routeItems[routeItems.length - 1];
+    const runId = `auto_run_${Date.now()}_${sourceItem.id}_${goalItem.id}`;
+
+    const steps: AutoRunStep[] = routeItems.slice(0, -1).map((item, index) => {
+        const nextItem = routeItems[index + 1];
+
+        return {
+            id: `${runId}_step_${index}_${item.id}_${nextItem.id}`,
+            fromItem: item,
+            toItem: nextItem,
+            status: "queued",
+            reason: getAutoRunStepReason(index, nextItem, goalItem, aiRoute),
+        };
+    });
+
+    const baseRun: AutoRun = {
+        id: runId,
+        title:
+            aiRoute?.title ??
+            `${sourceItem.title}から${goalItem.title}への完全自動ルート`,
+        summary:
+            aiRoute?.summary ??
+            "AIが候補探索、交換申請、承認、完了まで自動で進めるルートです。",
+        matchScore: aiRoute?.matchScore ?? 74,
+        source: aiRoute?.source ?? "manual",
+        sourceItem,
+        goalItem,
+        currentItem: sourceItem,
+        activeStepIndex: 0,
+        steps,
+        logs: [],
+        createdAt,
+        updatedAt: createdAt,
+    };
+
+    const highValueItems = routeItems.filter((item) => item.price >= 10000);
+    const initializedRun = appendAutoRunLog(
+        baseRun,
+        `${sourceItem.title}から${goalItem.title}まで、${steps.length}件の自動交換ステップを生成しました。`
+    );
+
+    return highValueItems.length > 0
+        ? appendAutoRunLog(
+            initializedRun,
+            `${highValueItems[0].title}は高額候補です。通知のみ行い、自動交換は継続します。`,
+            "warning"
+        )
+        : initializedRun;
+}
+
+function getAutoRunStepReason(
+    index: number,
+    item: Item,
+    goalItem: Item,
+    aiRoute: AiTradeRoute | undefined
+): string {
+    const aiStepReason = aiRoute?.steps[index + 1]?.matchReason;
+    if (aiStepReason) return aiStepReason;
+    if (item.id === goalItem.id) return "目的の商品へ到達する最終ステップです。";
+    if (item.category === goalItem.category) return "目的商品のカテゴリに近い中継候補です。";
+    return "価格差とカテゴリ相性から、次の交換につなげやすい候補です。";
+}
+
+function updateAutoRunStep(
+    run: AutoRun,
+    stepId: string,
+    patch: Partial<AutoRunStep>,
+    runPatch: Partial<AutoRun> = {}
+): AutoRun {
+    const updatedAt = new Date().toISOString();
+
+    return {
+        ...run,
+        ...runPatch,
+        updatedAt,
+        steps: run.steps.map((step) =>
+            step.id === stepId ? { ...step, ...patch } : step
+        ),
+    };
+}
+
+function appendAutoRunLog(
+    run: AutoRun,
+    message: string,
+    level: AutoRunLogLevel = "info"
+): AutoRun {
+    const at = new Date().toISOString();
+
+    return {
+        ...run,
+        updatedAt: at,
+        logs: [
+            ...run.logs,
+            {
+                id: `${run.id}_log_${Date.now()}_${run.logs.length}`,
+                at,
+                level,
+                message,
+            },
+        ].slice(-maxAutoRunLogs),
+    };
+}
+
+function buildAutoRunRouteItems(run: AutoRun): Item[] {
+    return [run.sourceItem, ...run.steps.map((step) => step.toItem)];
 }
 
 function scoreCandidate(
@@ -1085,6 +1585,47 @@ function getSavedRouteStorageKey(userId: string): string {
     return `${savedRouteStorageKeyPrefix}.${userId}`;
 }
 
+function getStoredAutoRun(userId: string): AutoRun | undefined {
+    try {
+        const storedValue = window.localStorage.getItem(getAutoRunStorageKey(userId));
+        if (!storedValue) return undefined;
+
+        const parsedValue: unknown = JSON.parse(storedValue);
+        return isAutoRun(parsedValue) ? parsedValue : undefined;
+    } catch (error) {
+        console.warn("AIオートモードの実行状態を読み込めませんでした", error);
+        return undefined;
+    }
+}
+
+function saveStoredAutoRun(userId: string, run: AutoRun): AutoRun {
+    try {
+        window.localStorage.setItem(getAutoRunStorageKey(userId), JSON.stringify(run));
+    } catch (error) {
+        console.warn("AIオートモードの実行状態を保存できませんでした", error);
+    }
+
+    return run;
+}
+
+function clearStoredAutoRun(userId: string): void {
+    try {
+        window.localStorage.removeItem(getAutoRunStorageKey(userId));
+    } catch (error) {
+        console.warn("AIオートモードの実行状態を削除できませんでした", error);
+    }
+}
+
+function getAutoRunStorageKey(userId: string): string {
+    return `${autoRunStorageKeyPrefix}.${userId}`;
+}
+
+function getStoredAutoRunStatus(run: AutoRun): AutoStatus {
+    return run.steps.every((step) => step.status === "completed")
+        ? "completed"
+        : "paused";
+}
+
 function isSavedAiRoute(value: unknown): value is SavedAiRoute {
     if (!isRecord(value)) return false;
 
@@ -1136,6 +1677,68 @@ function isSavedRouteStepStatus(value: unknown): value is SavedRouteStepStatus {
     );
 }
 
+function isAutoRun(value: unknown): value is AutoRun {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        typeof value.title === "string" &&
+        typeof value.summary === "string" &&
+        typeof value.matchScore === "number" &&
+        isSavedRouteItem(value.sourceItem) &&
+        isSavedRouteItem(value.goalItem) &&
+        isSavedRouteItem(value.currentItem) &&
+        typeof value.activeStepIndex === "number" &&
+        Array.isArray(value.steps) &&
+        value.steps.every(isAutoRunStep) &&
+        Array.isArray(value.logs) &&
+        value.logs.every(isAutoRunLog) &&
+        typeof value.createdAt === "string" &&
+        typeof value.updatedAt === "string"
+    );
+}
+
+function isAutoRunStep(value: unknown): value is AutoRunStep {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        isSavedRouteItem(value.fromItem) &&
+        isSavedRouteItem(value.toItem) &&
+        isAutoRunStepStatus(value.status) &&
+        typeof value.reason === "string" &&
+        (value.tradeRequestId === undefined || typeof value.tradeRequestId === "string") &&
+        (value.requestedAt === undefined || typeof value.requestedAt === "string") &&
+        (value.approvedAt === undefined || typeof value.approvedAt === "string") &&
+        (value.completedAt === undefined || typeof value.completedAt === "string") &&
+        (value.updatedAt === undefined || typeof value.updatedAt === "string")
+    );
+}
+
+function isAutoRunStepStatus(value: unknown): value is AutoRunStepStatus {
+    return (
+        value === "queued" ||
+        value === "requested" ||
+        value === "approved" ||
+        value === "completed"
+    );
+}
+
+function isAutoRunLog(value: unknown): value is AutoRunLog {
+    if (!isRecord(value)) return false;
+
+    return (
+        typeof value.id === "string" &&
+        typeof value.at === "string" &&
+        isAutoRunLogLevel(value.level) &&
+        typeof value.message === "string"
+    );
+}
+
+function isAutoRunLogLevel(value: unknown): value is AutoRunLogLevel {
+    return value === "info" || value === "success" || value === "warning";
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -1169,6 +1772,23 @@ function getSavedRouteCompletedCount(route: SavedAiRoute): number {
     return route.steps.filter((step) => step.status === "completed").length;
 }
 
+function getAutoStatusLabel(status: AutoStatus): string {
+    if (status === "running") return "完全自動で実行中";
+    if (status === "paused") return "手動停止中";
+    if (status === "completed") return "目的商品に到達";
+    if (status === "blocked") return "確認が必要";
+
+    return "待機中";
+}
+
+function getAutoRunStepStatusLabel(status: AutoRunStepStatus): string {
+    if (status === "requested") return "申請済み";
+    if (status === "approved") return "承認済み";
+    if (status === "completed") return "完了";
+
+    return "待機";
+}
+
 function formatSavedRouteDate(value: string): string {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "日時不明";
@@ -1181,11 +1801,27 @@ function formatSavedRouteDate(value: string): string {
     }).format(date);
 }
 
+function formatAutoLogTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--:--";
+
+    return new Intl.DateTimeFormat("ja-JP", {
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(date);
+}
+
 function getRouteStepLabel(index: number, length: number): string {
     if (index === 0) return "開始商品";
     if (index === length - 1) return "目標";
     if (index === 1) return "提案中";
     return "候補";
+}
+
+function wait(milliseconds: number): Promise<void> {
+    return new Promise((resolve) => {
+        window.setTimeout(resolve, milliseconds);
+    });
 }
 
 export default AiProposalScreen;

@@ -7,7 +7,9 @@ import "./HomeScreen.css";
 type HomeScreenProps = {
     onSelectItem: (itemId: string) => void;
     favoriteItemIds: string[];
+    aiWarehouseFavoriteItemIds: string[];
     onToggleFavorite: (itemId: string) => void;
+    onToggleAiWarehouseFavorite: (itemId: string) => void;
 };
 
 type ListingFilter = "direct" | "aiWarehouse" | "gachaWarehouse";
@@ -32,23 +34,25 @@ const listingFilters: ListingFilterOption[] = [
         emptyLabel: "通常出品",
     },
     {
-        label: "AI提案候補",
+        label: "AI候補",
         value: "aiWarehouse",
         description: "AIが交換ルートを作る時に利用する倉庫商品です。",
-        emptyLabel: "AI提案候補",
+        emptyLabel: "AI候補",
     },
     {
-        label: "ガチャ提案候補",
+        label: "ガチャ候補",
         value: "gachaWarehouse",
         description: "ガチャ交換の抽選対象として利用する倉庫商品です。",
-        emptyLabel: "ガチャ提案候補",
+        emptyLabel: "ガチャ候補",
     },
 ];
 
 function HomeScreen({
     onSelectItem,
     favoriteItemIds,
+    aiWarehouseFavoriteItemIds,
     onToggleFavorite,
+    onToggleAiWarehouseFavorite,
 }: HomeScreenProps) {
     const [activeCategory, setActiveCategory] = useState("すべて");
     const [activeListingFilter, setActiveListingFilter] =
@@ -107,7 +111,18 @@ function HomeScreen({
                     description: activeListingOption.description,
                     items: directItems,
                 };
-    const shouldShowFavoriteButton = activeListingFilter === "direct";
+    const shouldShowFavoriteButton =
+        activeListingFilter === "direct" || activeListingFilter === "aiWarehouse";
+    const activeFavoriteItemIds =
+        activeListingFilter === "aiWarehouse"
+            ? aiWarehouseFavoriteItemIds
+            : favoriteItemIds;
+    const activeFavoriteHandler =
+        activeListingFilter === "aiWarehouse"
+            ? onToggleAiWarehouseFavorite
+            : activeListingFilter === "direct"
+                ? onToggleFavorite
+                : undefined;
 
     return (
         <section className="home-screen">
@@ -183,11 +198,9 @@ function HomeScreen({
                         <ItemCard
                             key={item.id}
                             item={item}
-                            isFavorite={favoriteItemIds.includes(item.id)}
+                            isFavorite={activeFavoriteItemIds.includes(item.id)}
                             onSelectItem={onSelectItem}
-                            onToggleFavorite={
-                                shouldShowFavoriteButton ? onToggleFavorite : undefined
-                            }
+                            onToggleFavorite={activeFavoriteHandler}
                             showFavoriteButton={shouldShowFavoriteButton}
                         />
                     ))}
