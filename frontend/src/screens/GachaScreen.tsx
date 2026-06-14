@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ConfirmationNotice from "../components/ConfirmationNotice";
-import { getGachaItem, getItems } from "../features/items/itemApi";
+import { completeGachaExchange, getGachaItem, getItems } from "../features/items/itemApi";
 import type { Item, ItemGachaResult } from "../features/items/itemTypes";
 import { getGachaPriceBand } from "../features/items/gachaPriceBands";
 import { isCurrentUserResource } from "../features/users/currentUser";
@@ -57,6 +57,8 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
             items.filter(
                 (item) =>
                     item.status === "available" &&
+                    item.listingType === "warehouse" &&
+                    item.warehouseUseCase === "gacha" &&
                     isCurrentUserResource(item.ownerId, currentUser.id)
             ),
         [currentUser.id, items]
@@ -146,13 +148,29 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
             return;
         }
 
+        const exchangedItems = await completeGachaExchange({
+            offeredItem: sourceItem,
+            receivedItem: gachaResult.item,
+            currentUserId: currentUser.id,
+            currentUserName: currentUser.username,
+        });
         const completedGachaExchange = toCompletedExchange(
-            sourceItem,
-            gachaResult,
+            exchangedItems.offeredItem,
+            {
+                ...gachaResult,
+                item: exchangedItems.receivedItem,
+            },
             priceBand.label,
             selectedCategory === allCategoriesValue ? "すべて" : selectedCategory
         );
 
+        setItems((currentItems) =>
+            upsertItems(currentItems, [
+                exchangedItems.offeredItem,
+                exchangedItems.receivedItem,
+            ])
+        );
+        setSourceItemId("");
         setCompletedExchange(completedGachaExchange);
         setExchangeHistory((currentHistory) =>
             saveGachaHistory(currentUser.id, [
@@ -191,7 +209,7 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                     {sourceItems.length > 0 ? (
                         <>
                             <label className="gacha-screen__select">
-                                <span>あなたの商品</span>
+                                <span>ガチャ倉庫の商品</span>
                                 <select
                                     onChange={(event) => handleSourceChange(event.target.value)}
                                     value={sourceItemId}
@@ -218,8 +236,8 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                         </>
                     ) : (
                         <div className="gacha-screen__empty-card">
-                            <h3>出品中の商品がありません</h3>
-                            <p>交換に出す商品を登録すると、同価格帯のガチャをまわせます。</p>
+                            <h3>ガチャ倉庫の商品がありません</h3>
+                            <p>マイページから商品をガチャ倉庫へ入れると、同価格帯のガチャをまわせます。</p>
                         </div>
                     )}
 
@@ -565,6 +583,16 @@ function formatGachaHistoryDate(value: string): string {
         hour: "2-digit",
         minute: "2-digit",
     }).format(date);
+}
+
+function upsertItems(items: Item[], updatedItems: Item[]): Item[] {
+    const itemById = new Map(items.map((item) => [item.id, item]));
+
+    for (const item of updatedItems) {
+        itemById.set(item.id, item);
+    }
+
+    return Array.from(itemById.values());
 }
 
 function wait(milliseconds: number): Promise<void> {

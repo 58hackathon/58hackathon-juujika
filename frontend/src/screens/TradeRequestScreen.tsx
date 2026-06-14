@@ -37,6 +37,7 @@ function TradeRequestScreen({
                 (item) =>
                     item.id !== targetItem.id &&
                     item.status === "available" &&
+                    item.listingType === "direct" &&
                     isCurrentUserResource(item.ownerId, currentUser.id)
             );
             setSelectedOfferId(firstOffer?.id ?? "");
@@ -52,6 +53,7 @@ function TradeRequestScreen({
                     (item) =>
                         item.id !== targetItem.id &&
                         item.status === "available" &&
+                        item.listingType === "direct" &&
                         isCurrentUserResource(item.ownerId, currentUser.id)
                 )
                 .slice(0, 6),
@@ -177,7 +179,7 @@ function TradeRequestScreen({
                         ) : (
                             <div className="trade-request-screen__empty-offers">
                                 <h3>先に交換に出す商品を登録しましょう</h3>
-                                <p>交換申請には、自分が出品中の商品が1つ以上必要です。</p>
+                                <p>交換申請には、通常出品として交換できる自分の商品が1つ以上必要です。</p>
                             </div>
                         )}
                     </section>

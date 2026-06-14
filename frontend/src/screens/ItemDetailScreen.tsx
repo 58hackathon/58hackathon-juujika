@@ -99,51 +99,51 @@ function ItemDetailScreen({
                     </section>
                 </div>
 
-                {isOwnItem ? (
-                    isWarehouseItem ? (
-                        <section className="item-detail-screen__warehouse-panel">
-                            <h2>倉庫保管中</h2>
-                            <p>
-                                AI提案やガチャ交換のルート内で使われる商品です。
-                            </p>
-                            <div className="item-detail-screen__warehouse-tags">
-                                {getWarehouseUseCaseLabels(item).map((label) => (
-                                    <span key={label}>{label}</span>
+                {isWarehouseItem ? (
+                    <section className="item-detail-screen__warehouse-panel">
+                        <h2>{isOwnItem ? "倉庫保管中" : "倉庫保管の商品です"}</h2>
+                        <p>
+                            {item.warehouseUseCase === "gacha"
+                                ? "ガチャ倉庫の商品はガチャ交換だけで利用され、通常の交換申請では交換できません。"
+                                : "AI提案や交換ルート内で使われる商品です。通常の交換申請では交換できません。"}
+                        </p>
+                        <div className="item-detail-screen__warehouse-tags">
+                            {getWarehouseUseCaseLabels(item).map((label) => (
+                                <span key={label}>{label}</span>
+                            ))}
+                        </div>
+                    </section>
+                ) : isOwnItem ? (
+                    <section className="item-detail-screen__owner-panel">
+                        <div className="item-detail-screen__owner-heading">
+                            <h2>届いた交換申請</h2>
+                            <span>{receivedRequests.length}件</span>
+                        </div>
+
+                        {receivedRequests.length > 0 ? (
+                            <div className="item-detail-screen__request-list">
+                                {receivedRequests.map((request) => (
+                                    <article className="item-detail-screen__request" key={request.id}>
+                                        <div className="item-detail-screen__request-top">
+                                            <strong>@{request.requesterName}</strong>
+                                            <span className={`item-detail-screen__status item-detail-screen__status--${request.status}`}>
+                                                {statusLabels[request.status]}
+                                            </span>
+                                        </div>
+                                        <p className="item-detail-screen__offered">
+                                            提示されたもの: {request.offeredItemTitle}
+                                        </p>
+                                        <p className="item-detail-screen__comment">{request.message}</p>
+                                    </article>
                                 ))}
                             </div>
-                        </section>
-                    ) : (
-                        <section className="item-detail-screen__owner-panel">
-                            <div className="item-detail-screen__owner-heading">
-                                <h2>届いた交換申請</h2>
-                                <span>{receivedRequests.length}件</span>
+                        ) : (
+                            <div className="item-detail-screen__empty-requests">
+                                <p>まだこの商品への交換申請はありません。</p>
+                                <span>申請が届くと、相手のコメントや提示された商品がここに表示されます。</span>
                             </div>
-
-                            {receivedRequests.length > 0 ? (
-                                <div className="item-detail-screen__request-list">
-                                    {receivedRequests.map((request) => (
-                                        <article className="item-detail-screen__request" key={request.id}>
-                                            <div className="item-detail-screen__request-top">
-                                                <strong>@{request.requesterName}</strong>
-                                                <span className={`item-detail-screen__status item-detail-screen__status--${request.status}`}>
-                                                    {statusLabels[request.status]}
-                                                </span>
-                                            </div>
-                                            <p className="item-detail-screen__offered">
-                                                提示されたもの: {request.offeredItemTitle}
-                                            </p>
-                                            <p className="item-detail-screen__comment">{request.message}</p>
-                                        </article>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="item-detail-screen__empty-requests">
-                                    <p>まだこの商品への交換申請はありません。</p>
-                                    <span>申請が届くと、相手のコメントや提示された商品がここに表示されます。</span>
-                                </div>
-                            )}
-                        </section>
-                    )
+                        )}
+                    </section>
                 ) : (
                     <button
                         className="item-detail-screen__request-button"

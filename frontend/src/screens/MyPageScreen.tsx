@@ -153,10 +153,10 @@ function MyPageScreen({
                                         <span>
                                             {item.listingType === "warehouse" ? "倉庫" : "通常出品"}
                                         </span>
-                                        {item.warehouseUseCases?.includes("ai_route") && (
+                                        {item.warehouseUseCase === "ai_route" && (
                                             <span>AI倉庫</span>
                                         )}
-                                        {item.warehouseUseCases?.includes("gacha") && (
+                                        {item.warehouseUseCase === "gacha" && (
                                             <span>ガチャ倉庫</span>
                                         )}
                                     </div>
@@ -286,7 +286,7 @@ function WarehouseButton({
     onRequestConfirmation: (confirmation: PendingWarehouseConfirmation) => void;
     warehouseUseCase: ItemWarehouseUseCase;
 }) {
-    const isRegistered = item.warehouseUseCases?.includes(warehouseUseCase) === true;
+    const isRegistered = item.warehouseUseCase === warehouseUseCase;
 
     return (
         <button
