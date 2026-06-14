@@ -1,4 +1,9 @@
-import type { Item, ItemGachaInput, ItemGachaResult } from "./itemTypes";
+import type {
+  Item,
+  ItemGachaInput,
+  ItemGachaResult,
+  ItemWarehouseUseCase,
+} from "./itemTypes";
 import { demoItems } from "./itemData";
 
 type ApiItem = Omit<Item, "price"> & {
@@ -152,6 +157,44 @@ export async function createItem(input: {
   }
 }
 
+export async function addItemToWarehouse(input: {
+  item: Item;
+  warehouseUseCase: ItemWarehouseUseCase;
+}): Promise<Item> {
+  try {
+    const response = await fetch(
+      `/api/items/${encodeURIComponent(input.item.id)}/warehouse-use-cases`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          warehouseUseCase: input.warehouseUseCase,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to update item warehouse use cases");
+    }
+
+    const json: ItemResponse = await response.json();
+    return toItem(json.data);
+  } catch (error) {
+    console.warn("APIにつながらないため画面上で倉庫登録を反映します", error);
+
+    const updatedItem = toWarehouseItem(input.item, input.warehouseUseCase);
+    fallbackItems = fallbackItems.some((item) => item.id === updatedItem.id)
+      ? fallbackItems.map((item) =>
+          item.id === updatedItem.id ? updatedItem : item
+        )
+      : [updatedItem, ...fallbackItems];
+
+    return updatedItem;
+  }
+}
+
 function getFallbackGachaItem(input: ItemGachaInput): ItemGachaResult | undefined {
   const candidates = fallbackItems.filter((item) => matchesGachaInput(item, input));
 
@@ -165,6 +208,21 @@ function getFallbackGachaItem(input: ItemGachaInput): ItemGachaResult | undefine
     item,
     reason: buildFallbackGachaReason(item, input),
     poolSize: candidates.length,
+  };
+}
+
+function toWarehouseItem(
+  item: Item,
+  warehouseUseCase: ItemWarehouseUseCase
+): Item {
+  const warehouseUseCases = item.warehouseUseCases ?? [];
+
+  return {
+    ...item,
+    listingType: "warehouse",
+    warehouseUseCases: warehouseUseCases.includes(warehouseUseCase)
+      ? warehouseUseCases
+      : [...warehouseUseCases, warehouseUseCase],
   };
 }
 

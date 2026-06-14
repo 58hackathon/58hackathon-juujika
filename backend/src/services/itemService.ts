@@ -1,4 +1,5 @@
 import type {
+  AddItemToWarehouseInput,
   CreateItemInput,
   Item,
   ItemGachaInput,
@@ -133,6 +134,44 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   return toItem(document);
 }
 
+export async function addItemToWarehouse(
+  id: string,
+  input: AddItemToWarehouseInput
+): Promise<Item> {
+  const item = await getItemById(id);
+
+  if (!item) {
+    throw new ItemServiceError("Item not found", 404);
+  }
+
+  const nextItem: Item = {
+    ...item,
+    listingType: "warehouse",
+    warehouseUseCases: item.warehouseUseCases.includes(input.warehouseUseCase)
+      ? item.warehouseUseCases
+      : [...item.warehouseUseCases, input.warehouseUseCase],
+  };
+
+  if (!hasFirebaseConfig()) {
+    const itemIndex = fallbackItems.findIndex((fallbackItem) => fallbackItem.id === id);
+    if (itemIndex >= 0) {
+      fallbackItems[itemIndex] = nextItem;
+    }
+
+    return nextItem;
+  }
+
+  const document = await requestFirestore<FirestoreDocument>(
+    `/${itemsCollectionName}/${nextItem.id}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(toFirestoreDocument(nextItem)),
+    }
+  );
+
+  return toItem(document);
+}
+
 export async function getGachaItem(
   input: ItemGachaInput = {}
 ): Promise<ItemGachaResult | undefined> {
@@ -184,6 +223,8 @@ function matchesGachaInput(item: Item, input: ItemGachaInput): boolean {
     item.id !== input.excludeItemId &&
     item.id !== input.sourceItemId &&
     item.ownerId !== input.userId &&
+    item.listingType === "warehouse" &&
+    item.warehouseUseCases.includes("gacha") &&
     matchesOptionalText(item.category, input.category) &&
     matchesOptionalMin(item.price, input.minPrice) &&
     matchesOptionalMax(item.price, input.maxPrice)

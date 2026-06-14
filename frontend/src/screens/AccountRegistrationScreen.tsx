@@ -114,22 +114,8 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
                         </p>
                     </div>
 
-                    <div className="account-benefit-grid">
-                        <article>
-                            <span>↔</span>
-                            <h2>直接交換</h2>
-                            <p>ユーザー同士でそのまま交換</p>
-                        </article>
-                        <article>
-                            <span>✦</span>
-                            <h2>AI提案</h2>
-                            <p>欲しいモノへの道筋を提案</p>
-                        </article>
-                        <article>
-                            <span>□</span>
-                            <h2>倉庫保管</h2>
-                            <p>預けて、探して、つないでくれる</p>
-                        </article>
+                    <div className="account-welcome">
+                        <img src="./public/images/demo/generated/1.png" alt="" />
                     </div>
 
                     <button
