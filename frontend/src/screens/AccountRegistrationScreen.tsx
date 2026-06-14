@@ -39,6 +39,15 @@ const planOptions: {
     },
 ];
 
+const demoPassword = "demo-pass-2026";
+const demoShippingAddress = {
+    postalCode: "150-0001",
+    prefectureCity: "東京都渋谷区",
+    addressLine: "神宮前1-2-3",
+    building: "デモビル101",
+};
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenProps) {
     const [step, setStep] = useState<RegistrationStep>("welcome");
     const [username, setUsername] = useState("");
@@ -52,34 +61,20 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
     const [errorMessage, setErrorMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const hasValidEmail = emailPattern.test(email);
     const hasValidBasicInfo =
         username.trim() !== "" &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+        hasValidEmail &&
         password.length >= 8;
     const hasValidShipping =
         postalCode.trim() !== "" &&
         prefectureCity.trim() !== "" &&
         addressLine.trim() !== "";
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!hasValidBasicInfo || !hasValidShipping || isSubmitting) return;
-
+    const submitRegistration = async (input: RegisterUserInput) => {
+        if (isSubmitting) return;
         setIsSubmitting(true);
         setErrorMessage("");
-
-        const input: RegisterUserInput = {
-            username: username.trim(),
-            email: email.trim(),
-            password,
-            plan,
-            shippingAddress: {
-                postalCode: postalCode.trim(),
-                prefectureCity: prefectureCity.trim(),
-                addressLine: addressLine.trim(),
-                building: building.trim() || undefined,
-            },
-        };
 
         try {
             const user = await registerUser(input);
@@ -91,6 +86,66 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const createRegistrationInput = (useDemoDefaults = false): RegisterUserInput => {
+        const fallbackUsername = `demo_user_${Date.now().toString().slice(-4)}`;
+        const fallbackEmail = `demo_${Date.now()}@example.com`;
+
+        return {
+            username: username.trim() || (useDemoDefaults ? fallbackUsername : ""),
+            email:
+                emailPattern.test(email.trim()) || !useDemoDefaults
+                    ? email.trim()
+                    : fallbackEmail,
+            password: password.length >= 8 || !useDemoDefaults ? password : demoPassword,
+            plan,
+            shippingAddress: {
+                postalCode:
+                    postalCode.trim() ||
+                    (useDemoDefaults ? demoShippingAddress.postalCode : ""),
+                prefectureCity:
+                    prefectureCity.trim() ||
+                    (useDemoDefaults ? demoShippingAddress.prefectureCity : ""),
+                addressLine:
+                    addressLine.trim() ||
+                    (useDemoDefaults ? demoShippingAddress.addressLine : ""),
+                building:
+                    building.trim() ||
+                    (useDemoDefaults ? demoShippingAddress.building : undefined),
+            },
+        };
+    };
+
+    const fillDemoBasicInfo = () => {
+        const fallbackUsername = `demo_user_${Date.now().toString().slice(-4)}`;
+
+        setUsername((currentValue) => currentValue.trim() || fallbackUsername);
+        setEmail((currentValue) =>
+            emailPattern.test(currentValue.trim())
+                ? currentValue.trim()
+                : `demo_${Date.now()}@example.com`
+        );
+        setPassword((currentValue) =>
+            currentValue.length >= 8 ? currentValue : demoPassword
+        );
+        setErrorMessage("");
+        setStep("shipping");
+    };
+
+    const handleSkipWelcome = () => {
+        void submitRegistration(createRegistrationInput(true));
+    };
+
+    const handleSkipShipping = () => {
+        void submitRegistration(createRegistrationInput(true));
+    };
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!hasValidBasicInfo || !hasValidShipping || isSubmitting) return;
+
+        await submitRegistration(createRegistrationInput());
     };
 
     return (
@@ -125,6 +180,19 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
                     >
                         アカウント作成
                     </button>
+                    <button
+                        className="account-registration-screen__secondary"
+                        disabled={isSubmitting}
+                        onClick={handleSkipWelcome}
+                        type="button"
+                    >
+                        {isSubmitting ? "登録中..." : "登録をスキップしてはじめる"}
+                    </button>
+                    {errorMessage && (
+                        <p className="account-registration-form__error">
+                            {errorMessage}
+                        </p>
+                    )}
                 </div>
             )}
 
@@ -218,14 +286,24 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
                                 />
                             </label>
 
-                            <button
-                                className="account-registration-screen__primary"
-                                disabled={!hasValidBasicInfo}
-                                onClick={() => setStep("shipping")}
-                                type="button"
-                            >
-                                次へ
-                            </button>
+                            <div className="account-registration-actions">
+                                <button
+                                    className="account-registration-screen__primary"
+                                    disabled={!hasValidBasicInfo}
+                                    onClick={() => setStep("shipping")}
+                                    type="button"
+                                >
+                                    次へ
+                                </button>
+                                <button
+                                    className="account-registration-screen__secondary"
+                                    disabled={isSubmitting}
+                                    onClick={fillDemoBasicInfo}
+                                    type="button"
+                                >
+                                    このステップをスキップ
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -299,13 +377,23 @@ function AccountRegistrationScreen({ onRegistered }: AccountRegistrationScreenPr
                                 </p>
                             )}
 
-                            <button
-                                className="account-registration-screen__primary"
-                                disabled={!hasValidShipping || isSubmitting}
-                                type="submit"
-                            >
-                                {isSubmitting ? "登録中..." : "はじめる"}
-                            </button>
+                            <div className="account-registration-actions">
+                                <button
+                                    className="account-registration-screen__primary"
+                                    disabled={!hasValidShipping || isSubmitting}
+                                    type="submit"
+                                >
+                                    {isSubmitting ? "登録中..." : "はじめる"}
+                                </button>
+                                <button
+                                    className="account-registration-screen__secondary"
+                                    disabled={isSubmitting}
+                                    onClick={handleSkipShipping}
+                                    type="button"
+                                >
+                                    {isSubmitting ? "登録中..." : "このステップをスキップ"}
+                                </button>
+                            </div>
                         </div>
                     )}
                 </form>

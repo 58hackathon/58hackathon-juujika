@@ -151,9 +151,19 @@ function AiProposalScreen({
     }, [aiWarehouseFavoriteItemIds, items]);
 
     const guidedGoalItems = favoriteGoalItems.filter((item) => item.id !== guidedSourceItemId);
-    const guidedSourceItem = findItem(items, guidedSourceItemId);
+    const guidedStartItem = findItem(items, guidedSourceItemId);
     const guidedGoalItem = findItem(items, guidedGoalItemId);
-    const hasGuidedSelection = Boolean(guidedSourceItem && guidedGoalItem);
+    const guidedRouteItemIds =
+        guidedSourceItemId && acceptedRouteItemIds.length === 0
+            ? [guidedSourceItemId]
+            : acceptedRouteItemIds;
+    const guidedRouteSourceItemId =
+        guidedRouteItemIds.length > 0
+            ? guidedRouteItemIds[guidedRouteItemIds.length - 1]
+            : guidedSourceItemId;
+    const guidedRouteSourceItem =
+        findItem(items, guidedRouteSourceItemId) ?? guidedStartItem;
+    const hasGuidedSelection = Boolean(guidedStartItem && guidedGoalItem);
     const autoGoalItems = favoriteGoalItems.filter((item) => item.id !== autoSourceItemId);
     const autoSourceItem = findItem(items, autoSourceItemId);
     const autoGoalItem = findItem(items, autoGoalItemId);
@@ -192,7 +202,7 @@ function AiProposalScreen({
     }, [autoSourceItemId, guidedSourceItemId, warehouseItems]);
 
     useEffect(() => {
-        if (!guidedSourceItemId || !guidedGoalItemId || items.length === 0) {
+        if (!guidedRouteSourceItemId || !guidedGoalItemId || items.length === 0) {
             setGuidedAiRoutes([]);
             return;
         }
@@ -201,7 +211,7 @@ function AiProposalScreen({
 
         const loadAiRoutes = async () => {
             const result = await getAiTradeRoutes({
-                sourceItemId: guidedSourceItemId,
+                sourceItemId: guidedRouteSourceItemId,
                 goalItemId: guidedGoalItemId,
                 items,
                 limit: 4,
@@ -217,7 +227,7 @@ function AiProposalScreen({
         return () => {
             isActive = false;
         };
-    }, [guidedGoalItemId, guidedSourceItemId, items]);
+    }, [guidedGoalItemId, guidedRouteSourceItemId, items]);
 
     useEffect(() => {
         if (!autoSourceItemId || !autoGoalItemId || items.length === 0) {
@@ -250,15 +260,16 @@ function AiProposalScreen({
     const guidedCandidates = useMemo(
         () =>
             items
-                .filter((item) => item.id !== guidedSourceItem?.id && item.id !== guidedGoalItem?.id)
+                .filter((item) => item.id !== guidedRouteSourceItem?.id && item.id !== guidedGoalItem?.id)
+                .filter((item) => !guidedRouteItemIds.includes(item.id))
                 .filter(isAiWarehouseItem)
                 .filter((item) => item.status === "available")
                 .sort(
                     (left, right) =>
-                        scoreCandidate(right, guidedGoalItem, guidedSourceItem) -
-                        scoreCandidate(left, guidedGoalItem, guidedSourceItem)
+                        scoreCandidate(right, guidedGoalItem, guidedRouteSourceItem) -
+                        scoreCandidate(left, guidedGoalItem, guidedRouteSourceItem)
                 ),
-        [guidedGoalItem, guidedSourceItem, items]
+        [guidedGoalItem, guidedRouteItemIds, guidedRouteSourceItem, items]
     );
     const activeAiRoute = hasGuidedSelection
         ? guidedAiRoutes[guidedCandidateIndex % Math.max(guidedAiRoutes.length, 1)]
@@ -271,7 +282,7 @@ function AiProposalScreen({
             ? aiCandidate ??
             guidedCandidates[guidedCandidateIndex % Math.max(guidedCandidates.length, 1)] ??
             guidedGoalItem ??
-            guidedSourceItem
+            guidedRouteSourceItem
             : undefined;
     const autoCandidates = useMemo(
         () =>
@@ -292,7 +303,7 @@ function AiProposalScreen({
         : undefined;
     const routeItems = buildRouteItems(
         items,
-        acceptedRouteItemIds,
+        guidedRouteItemIds,
         guidedCandidate,
         guidedGoalItem
     );
@@ -347,6 +358,7 @@ function AiProposalScreen({
         setGuidedSourceItemId(itemId);
         setAcceptedRouteItemIds(itemId ? [itemId] : []);
         setGuidedCandidateIndex(0);
+        setGuidedAiRoutes([]);
         if (itemId === guidedGoalItemId) {
             setGuidedGoalItemId("");
         }
@@ -354,7 +366,9 @@ function AiProposalScreen({
 
     const handleGuidedGoalChange = (itemId: string) => {
         setGuidedGoalItemId(itemId);
+        setAcceptedRouteItemIds(guidedSourceItemId ? [guidedSourceItemId] : []);
         setGuidedCandidateIndex(0);
+        setGuidedAiRoutes([]);
     };
 
     const handleAutoSourceChange = (itemId: string) => {
@@ -402,12 +416,19 @@ function AiProposalScreen({
     const handleAcceptProposal = () => {
         if (!guidedCandidate) return;
 
-        setGuidedSourceItemId(guidedCandidate.id);
         setAcceptedRouteItemIds((currentIds) => {
-            if (currentIds.includes(guidedCandidate.id)) return currentIds;
-            return [...currentIds, guidedCandidate.id];
+            const baseIds =
+                currentIds.length > 0
+                    ? currentIds
+                    : guidedSourceItemId
+                        ? [guidedSourceItemId]
+                        : [];
+
+            if (baseIds.includes(guidedCandidate.id)) return baseIds;
+            return [...baseIds, guidedCandidate.id];
         });
-        setGuidedCandidateIndex((currentIndex) => currentIndex + 1);
+        setGuidedCandidateIndex(0);
+        setGuidedAiRoutes([]);
     };
 
     const handleSaveRoute = () => {
@@ -417,6 +438,9 @@ function AiProposalScreen({
         setSavedRoutes((currentRoutes) =>
             saveStoredSavedRoutes(currentUser.id, [savedRoute, ...currentRoutes])
         );
+        setAcceptedRouteItemIds(guidedSourceItemId ? [guidedSourceItemId] : []);
+        setGuidedCandidateIndex(0);
+        setGuidedAiRoutes([]);
     };
 
     const handleDeleteSavedRoute = (routeId: string) => {
@@ -689,7 +713,8 @@ function AiProposalScreen({
                     requestingStepId={requestingStepId}
                     routeItems={routeItems}
                     savedRoutes={savedRoutes}
-                    sourceItem={guidedSourceItem}
+                    selectedSourceItemId={guidedSourceItemId}
+                    sourceItem={guidedRouteSourceItem}
                     sourceItems={warehouseItems}
                 />
             ) : (
@@ -735,6 +760,7 @@ function GuidedMode({
     requestingStepId,
     routeItems,
     savedRoutes,
+    selectedSourceItemId,
     sourceItem,
     sourceItems,
 }: {
@@ -754,6 +780,7 @@ function GuidedMode({
     requestingStepId: string;
     routeItems: Item[];
     savedRoutes: SavedAiRoute[];
+    selectedSourceItemId: string;
     sourceItem: Item | undefined;
     sourceItems: Item[];
 }) {
@@ -769,7 +796,7 @@ function GuidedMode({
                     <span>開始する商品</span>
                     <select
                         onChange={(event) => onChangeSource(event.target.value)}
-                        value={sourceItem?.id ?? ""}
+                        value={selectedSourceItemId}
                     >
                         <option value=""></option>
                         {sourceItems.map((item) => (

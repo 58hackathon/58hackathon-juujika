@@ -96,10 +96,29 @@
     box-shadow: 0 14px 28px rgba(7, 87, 255, 0.22);
 }
 
-.account-registration-screen__primary:disabled {
+.account-registration-screen__secondary {
+    width: 100%;
+    height: 52px;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: #ffffff;
+    color: var(--color-text);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.account-registration-screen__primary:disabled,
+.account-registration-screen__secondary:disabled {
     cursor: not-allowed;
     opacity: 0.45;
     box-shadow: none;
+}
+
+.account-registration-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
 }
 
 .account-registration-form {
@@ -289,7 +308,8 @@
     }
 
     .account-registration-address,
-    .account-plan-grid {
+    .account-plan-grid,
+    .account-registration-actions {
         grid-template-columns: 1fr;
     }
 }
