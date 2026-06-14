@@ -8,6 +8,57 @@ type CreateItemScreenProps = {
     onItemCreated: () => void;
 };
 
+const maxPersistedImageSize = 720;
+const persistedImageQuality = 0.68;
+
+async function toPersistedImageUrl(file: File): Promise<string> {
+    const sourceDataUrl = await readFileAsDataUrl(file);
+    const image = await loadImage(sourceDataUrl);
+    const longestSide = Math.max(image.naturalWidth, image.naturalHeight);
+    const scale = longestSide > maxPersistedImageSize
+        ? maxPersistedImageSize / longestSide
+        : 1;
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) return sourceDataUrl;
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, width, height);
+
+    return canvas.toDataURL("image/jpeg", persistedImageQuality);
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                resolve(reader.result);
+                return;
+            }
+
+            reject(new Error("Failed to read image file"));
+        };
+        reader.onerror = () => reject(reader.error ?? new Error("Failed to read image file"));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Failed to load image file"));
+        image.src = src;
+    });
+}
+
 function CreateItemScreen({ currentUser, onItemCreated }: CreateItemScreenProps) {
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [itemName, setItemName] = useState("");
@@ -18,11 +69,11 @@ function CreateItemScreen({ currentUser, onItemCreated }: CreateItemScreenProps)
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isComplete, setIsComplete] = useState(false);
 
-    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
+    const imageUrl = await toPersistedImageUrl(file);
     setPhotoUrl(imageUrl);
     };
     const wantedOptions = [
