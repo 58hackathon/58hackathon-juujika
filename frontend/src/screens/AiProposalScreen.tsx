@@ -4,12 +4,13 @@ import type { AiTradeRoute } from "../features/aiProposals/aiProposalTypes";
 import { getItems } from "../features/items/itemApi";
 import type { Item } from "../features/items/itemTypes";
 import { createTradeRequest, updateTradeRequestStatus } from "../features/tradeRequests/tradeRequestApi";
+import { isCurrentUserResource } from "../features/users/currentUser";
 import type { RegisteredUser } from "../features/users/userTypes";
 import "./AiProposalScreen.css";
 
 type AiProposalScreenProps = {
     currentUser: RegisteredUser;
-    favoriteItemIds: string[];
+    aiWarehouseFavoriteItemIds: string[];
 };
 
 type AiMode = "guided" | "auto";
@@ -82,7 +83,10 @@ const maxSavedRoutes = 8;
 const maxAutoRunLogs = 24;
 const autoStepDelayMs = 680;
 
-function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProps) {
+function AiProposalScreen({
+    currentUser,
+    aiWarehouseFavoriteItemIds,
+}: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [mode, setMode] = useState<AiMode>("guided");
     const [guidedSourceItemId, setGuidedSourceItemId] = useState("");
@@ -131,18 +135,20 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
     }, [currentUser.id]);
 
     const warehouseItems = useMemo(() => {
-        const filteredItems = items.filter(
-            (item) => isAiWarehouseItem(item)
+        return items.filter(
+            (item) =>
+                isAiWarehouseItem(item) &&
+                isCurrentUserResource(item.ownerId, currentUser.id)
         );
-
-        return filteredItems.length > 0 ? filteredItems : items;
-    }, [items]);
+    }, [currentUser.id, items]);
 
     const favoriteGoalItems = useMemo(() => {
-        const favoriteItemIdSet = new Set(favoriteItemIds);
+        const favoriteItemIdSet = new Set(aiWarehouseFavoriteItemIds);
 
-        return items.filter((item) => favoriteItemIdSet.has(item.id));
-    }, [favoriteItemIds, items]);
+        return items.filter(
+            (item) => isAiWarehouseItem(item) && favoriteItemIdSet.has(item.id)
+        );
+    }, [aiWarehouseFavoriteItemIds, items]);
 
     const guidedGoalItems = favoriteGoalItems.filter((item) => item.id !== guidedSourceItemId);
     const guidedSourceItem = findItem(items, guidedSourceItemId);
@@ -168,6 +174,22 @@ function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProp
             setAutoGoalItemId("");
         }
     }, [autoGoalItemId, favoriteGoalItems, guidedGoalItemId]);
+
+    useEffect(() => {
+        if (
+            guidedSourceItemId &&
+            !warehouseItems.some((item) => item.id === guidedSourceItemId)
+        ) {
+            handleGuidedSourceChange("");
+        }
+
+        if (
+            autoSourceItemId &&
+            !warehouseItems.some((item) => item.id === autoSourceItemId)
+        ) {
+            handleAutoSourceChange("");
+        }
+    }, [autoSourceItemId, guidedSourceItemId, warehouseItems]);
 
     useEffect(() => {
         if (!guidedSourceItemId || !guidedGoalItemId || items.length === 0) {

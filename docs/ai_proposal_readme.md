@@ -26,10 +26,10 @@ Backend suggestion service
 
 ```txt
 開始商品 / sourceItem
-  交換ルートの出発点。AI倉庫の商品から選ぶ。
+  交換ルートの出発点。自分が出品し、AI倉庫に保存した商品から選ぶ。
 
 到達したい商品 / goalItem
-  ルートの目的地。現在はお気に入り登録済みの商品だけが候補になる。
+  ルートの目的地。AI倉庫内でお気に入り登録した商品だけが候補になる。
 
 候補商品 / candidateItem
   AIが次の交換先として評価する商品。原則として AI倉庫の商品。
@@ -59,7 +59,7 @@ AI提案画面には2つのモードがあります。
   実行状態は localStorage に保存される。
 ```
 
-到達したい商品は `favoriteItemIds` から作るため、ユーザーがお気に入りにした商品だけがゴール候補になります。この制約は「本当に欲しい商品」へルートを作るためのフィルタです。
+到達したい商品は `aiWarehouseFavoriteItemIds` から作るため、AI倉庫カードでお気に入り登録した商品だけがゴール候補になります。通常出品の `market` お気に入りは参照しません。この制約は「AI倉庫に保存した候補の中で本当に欲しい商品」へルートを作るためのフィルタです。
 
 ## フロントエンドのデータフロー
 
@@ -70,30 +70,33 @@ AI提案画面には2つのモードがあります。
 ```txt
 getItems()
   -> items
+  -> 自分のAI倉庫商品だけにfilter
   -> warehouseItems
   -> sourceItems / candidates
 ```
 
-AI倉庫の判定は現状この条件です。
+開始商品として表示するAI倉庫商品の条件は現状この形です。
 
 ```ts
 item.listingType === "warehouse" &&
-item.warehouseUseCase === "ai_route"
+item.warehouseUseCase === "ai_route" &&
+isCurrentUserResource(item.ownerId, currentUser.id)
 ```
 
 注意: 一部の実装では `warehouseUseCases` という複数用途配列も使われています。AI提案画面は現時点で単数の `warehouseUseCase` を見ているため、完全に複数用途対応へ寄せる場合は `isAiWarehouseItem()` と `aiProposalApi.ts` の candidate filter を合わせて変更してください。
 
 ### 2. ゴール候補の作成
 
-ゴール候補は全商品ではなく、お気に入り済み商品から作ります。
+ゴール候補は全商品ではなく、AI倉庫scopeでお気に入り済みの商品から作ります。
 
 ```txt
-items + favoriteItemIds
+items + aiWarehouseFavoriteItemIds
+  -> AI倉庫商品だけにfilter
   -> favoriteGoalItems
   -> guidedGoalItems / autoGoalItems
 ```
 
-選択済みのゴールがあとからお気に入り解除された場合は、`useEffect` で未選択に戻します。
+選択済みのゴールがあとからAI倉庫お気に入り解除された場合は、`useEffect` で未選択に戻します。
 
 ### 3. AIルート取得
 
@@ -134,7 +137,7 @@ input.items
   .filter((item) => item.status === "available")
 ```
 
-その後、`goalItemId` と一致する候補があれば先頭に寄せます。ただし、ゴール商品が通常出品で AI倉庫ではない場合、backend の `candidateItems` には入りません。現状の Gemini 評価は「source と AI倉庫候補の相性」を主に見ており、goal は frontend の route 表示や mock route 生成で強く効きます。
+その後、`goalItemId` と一致する候補があれば先頭に寄せます。ゴール商品もAI倉庫お気に入りから選ぶため、backend の `candidateItems` と同じ倉庫ドメインに揃います。現状の Gemini 評価は「source と AI倉庫候補の相性」を主に見ており、goal は frontend の route 表示や mock route 生成でも強く効きます。
 
 ### レスポンス変換
 
@@ -595,10 +598,10 @@ npm run ai:check
 
 画面確認:
 
-1. 商品一覧で欲しい商品をお気に入りにする
+1. 商品一覧のAI候補タブで欲しいAI倉庫商品をお気に入りにする
 2. AI提案へ移動する
 3. 開始商品にAI倉庫の商品を選ぶ
-4. 到達したい商品にお気に入り商品だけが出ることを確認する
+4. 到達したい商品にAI倉庫内でお気に入り登録した商品だけが出ることを確認する
 5. 候補をルートに追加する
 6. ルートを保存する
 7. 保存済みルートから交換申請を送る

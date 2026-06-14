@@ -41,11 +41,13 @@ function App() {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [selectedTradeRequest, setSelectedTradeRequest] = useState<TradeRequest | null>(null);
   const [favoriteItemIds, setFavoriteItemIds] = useState<string[]>([]);
+  const [aiWarehouseFavoriteItemIds, setAiWarehouseFavoriteItemIds] = useState<string[]>([]);
   const favoriteUserId = currentUser?.id ?? legacyCurrentUserId;
 
   useEffect(() => {
     if (!currentUser) {
       setFavoriteItemIds([]);
+      setAiWarehouseFavoriteItemIds([]);
       return;
     }
 
@@ -53,11 +55,17 @@ function App() {
 
     const loadFavorites = async () => {
       try {
-        const favorites = await getFavorites(favoriteUserId);
+        const [marketFavorites, aiWarehouseFavorites] = await Promise.all([
+          getFavorites(favoriteUserId, "market"),
+          getFavorites(favoriteUserId, "ai_warehouse"),
+        ]);
         if (!isActive) return;
 
         setFavoriteItemIds(
-          Array.from(new Set(favorites.map((favorite) => favorite.itemId)))
+          Array.from(new Set(marketFavorites.map((favorite) => favorite.itemId)))
+        );
+        setAiWarehouseFavoriteItemIds(
+          Array.from(new Set(aiWarehouseFavorites.map((favorite) => favorite.itemId)))
         );
       } catch (error) {
         console.warn("お気に入り一覧の取得に失敗しました", error);
@@ -94,6 +102,7 @@ function App() {
     setSelectedItem(null);
     setSelectedTradeRequest(null);
     setFavoriteItemIds([]);
+    setAiWarehouseFavoriteItemIds([]);
     setCurrentScreen("accountRegistration");
   };
 
@@ -110,17 +119,52 @@ function App() {
 
     try {
       if (isFavorite) {
-        await deleteFavorite(itemId, favoriteUserId);
+        await deleteFavorite(itemId, favoriteUserId, "market");
       } else {
         await createFavorite({
           userId: favoriteUserId,
           itemId,
+          scope: "market",
         });
       }
     } catch (error) {
       console.warn("お気に入りの更新に失敗しました", error);
 
       setFavoriteItemIds((currentIds) => {
+        if (isFavorite) {
+          return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
+        }
+
+        return currentIds.filter((currentId) => currentId !== itemId);
+      });
+    }
+  };
+
+  const handleToggleAiWarehouseFavorite = async (itemId: string) => {
+    const isFavorite = aiWarehouseFavoriteItemIds.includes(itemId);
+
+    setAiWarehouseFavoriteItemIds((currentIds) => {
+      if (isFavorite) {
+        return currentIds.filter((currentId) => currentId !== itemId);
+      }
+
+      return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
+    });
+
+    try {
+      if (isFavorite) {
+        await deleteFavorite(itemId, favoriteUserId, "ai_warehouse");
+      } else {
+        await createFavorite({
+          userId: favoriteUserId,
+          itemId,
+          scope: "ai_warehouse",
+        });
+      }
+    } catch (error) {
+      console.warn("AI倉庫お気に入りの更新に失敗しました", error);
+
+      setAiWarehouseFavoriteItemIds((currentIds) => {
         if (isFavorite) {
           return currentIds.includes(itemId) ? currentIds : [...currentIds, itemId];
         }
@@ -173,7 +217,9 @@ function App() {
             setCurrentScreen("itemDetail");
           }}
           favoriteItemIds={favoriteItemIds}
+          aiWarehouseFavoriteItemIds={aiWarehouseFavoriteItemIds}
           onToggleFavorite={handleToggleFavorite}
+          onToggleAiWarehouseFavorite={handleToggleAiWarehouseFavorite}
         />
       )}
 
@@ -250,7 +296,7 @@ function App() {
       {currentUser && currentScreen === "aiProposal" && (
         <AiProposalScreen
           currentUser={currentUser}
-          favoriteItemIds={favoriteItemIds}
+          aiWarehouseFavoriteItemIds={aiWarehouseFavoriteItemIds}
         />
       )}
 

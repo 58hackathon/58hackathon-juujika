@@ -15,7 +15,8 @@
   - 交換前の確認ダイアログと履歴保存
 - AI提案
   - ナビモードとオートモード
-  - お気に入り登録した商品だけを「到達したい商品」として選択
+  - 自分が出品してAI倉庫に保存した商品を開始商品として選択
+  - AI倉庫内でお気に入り登録した商品だけを「到達したい商品」として選択
   - 保存済みルートの進捗管理
   - 詳細設計は [docs/ai_proposal_readme.md](docs/ai_proposal_readme.md) を参照
 
@@ -140,9 +141,9 @@ GET    /api/users/me
 GET    /api/users/:id
 POST   /api/users
 
-GET    /api/favorites?userId=:userId
+GET    /api/favorites?userId=:userId&scope=:scope
 POST   /api/favorites
-DELETE /api/favorites/:itemId?userId=:userId
+DELETE /api/favorites/:itemId?userId=:userId&scope=:scope
 
 GET    /api/trade-requests
 GET    /api/trade-requests/:id
@@ -151,11 +152,14 @@ PATCH  /api/trade-requests/:id
 POST   /api/trade-requests/suggestions
 ```
 
+`favorites` の `scope` は通常出品用の `market`、AI倉庫用の `ai_warehouse` を指定します。
+
 詳しい契約は [docs/api_contract.md](docs/api_contract.md) を参照してください。
 
 ## データ保存について
 
 - 商品、ユーザー、お気に入りは API 接続に失敗した場合、デモデータやブラウザの `localStorage` にフォールバックします。
+- お気に入りは通常出品用の `market` とAI倉庫用の `ai_warehouse` scope に分かれます。
 - 現在のログインユーザー、お気に入り、ガチャ履歴、AI保存ルートはブラウザ側にも保存されます。
 - Firestore 環境変数を設定すると、対応しているバックエンドサービスは Firestore を使います。
 
