@@ -152,7 +152,7 @@ async function generateGeminiTradeSuggestions(
   limit: number,
   apiKey: string
 ): Promise<TradeSuggestion[]> {
-  const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
   const modelPath = model.startsWith("models/") ? model : `models/${model}`;
   const endpoint = new URL(
     `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent`
