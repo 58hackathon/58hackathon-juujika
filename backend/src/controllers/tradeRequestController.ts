@@ -1,19 +1,28 @@
 import type { Request, Response } from "express";
 
 import type {
+  CreateAutoTradeRouteInput,
   CreateTradeRequestInput,
   TradeSuggestionInput,
   TradeSuggestionItem,
   TradeRequestStatus,
+  UpdateAutoTradeRouteInput,
 } from "../models/tradeRequest.js";
 import type { Item } from "../models/item.js";
 import { getItems } from "../services/itemService.js";
 import {
+  createAutoTradeRoute as createAutoTradeRouteRecord,
   createTradeRequest as createTradeRequestRecord,
+  getAutoTradeRouteById,
+  getAutoTradeRoutes as getAutoTradeRouteRecords,
   getTradeRequestById,
   getTradeRequests as getTradeRequestRecords,
+  isAutoTradeRouteStatus,
+  isAutoTradeRouteStepStatus,
   isTradeRequestStatus,
   suggestTradeRequests,
+  TradeRequestServiceError,
+  updateAutoTradeRoute as updateAutoTradeRouteRecord,
   updateTradeRequestStatus,
 } from "../services/tradeRequestService.js";
 
@@ -110,6 +119,73 @@ export function patchTradeRequestStatus(req: Request, res: Response): void {
   res.json(tradeRequest);
 }
 
+export function listAutoTradeRoutes(req: Request, res: Response): void {
+  res.json({
+    data: getAutoTradeRouteRecords(getQueryParam(req.query.userId)),
+  });
+}
+
+export function getAutoTradeRoute(req: Request, res: Response): void {
+  const id = getRouteParam(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "id is required" });
+    return;
+  }
+
+  const autoRoute = getAutoTradeRouteById(id);
+  if (!autoRoute) {
+    res.status(404).json({ error: "Auto trade route not found" });
+    return;
+  }
+
+  res.json({ data: autoRoute });
+}
+
+export async function postAutoTradeRoute(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const input = toCreateAutoTradeRouteInput(req.body);
+  if (typeof input === "string") {
+    res.status(400).json({ error: input });
+    return;
+  }
+
+  try {
+    const autoRoute = await createAutoTradeRouteRecord(input);
+    res.status(201).json({ data: autoRoute });
+  } catch (error) {
+    if (error instanceof TradeRequestServiceError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
+
+    res.status(500).json({ error: "Auto trade route creation failed" });
+  }
+}
+
+export function patchAutoTradeRoute(req: Request, res: Response): void {
+  const id = getRouteParam(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "id is required" });
+    return;
+  }
+
+  const input = toUpdateAutoTradeRouteInput(req.body);
+  if (typeof input === "string") {
+    res.status(400).json({ error: input });
+    return;
+  }
+
+  const autoRoute = updateAutoTradeRouteRecord(id, input);
+  if (!autoRoute) {
+    res.status(404).json({ error: "Auto trade route not found" });
+    return;
+  }
+
+  res.json({ data: autoRoute });
+}
+
 export async function postTradeSuggestions(
   req: Request,
   res: Response
@@ -165,6 +241,71 @@ function toCreateTradeRequestInput(
   }
 
   return input;
+}
+
+function toCreateAutoTradeRouteInput(
+  value: unknown
+): CreateAutoTradeRouteInput | string {
+  if (!isRecord(value)) {
+    return "request body must be an object";
+  }
+
+  const userId = getStringField(value, "userId");
+  if (!userId) {
+    return "userId is required";
+  }
+
+  const sourceItemId = getStringField(value, "sourceItemId");
+  if (!sourceItemId) {
+    return "sourceItemId is required";
+  }
+
+  const goalItemId = getStringField(value, "goalItemId");
+  if (!goalItemId) {
+    return "goalItemId is required";
+  }
+
+  const autoApply = getOptionalBooleanField(value, "autoApply");
+  if (typeof autoApply === "string") {
+    return autoApply;
+  }
+
+  return {
+    userId,
+    sourceItemId,
+    goalItemId,
+    userName: getStringField(value, "userName"),
+    autoApply,
+  };
+}
+
+function toUpdateAutoTradeRouteInput(
+  value: unknown
+): UpdateAutoTradeRouteInput | string {
+  if (!isRecord(value)) {
+    return "request body must be an object";
+  }
+
+  const status = value.status;
+  if (status !== undefined && !isAutoTradeRouteStatus(status)) {
+    return "status must be one of: running, paused, completed, stopped";
+  }
+
+  const stepId = getStringField(value, "stepId");
+  const stepStatus = value.stepStatus;
+  if (stepStatus !== undefined && !isAutoTradeRouteStepStatus(stepStatus)) {
+    return "stepStatus must be one of: ready, requested, approved, completed";
+  }
+
+  if ((stepId && stepStatus === undefined) || (!stepId && stepStatus !== undefined)) {
+    return "stepId and stepStatus must be provided together";
+  }
+
+  return {
+    status: isAutoTradeRouteStatus(status) ? status : undefined,
+    stepId,
+    stepStatus: isAutoTradeRouteStepStatus(stepStatus) ? stepStatus : undefined,
+  };
 }
 
 async function toTradeSuggestionInput(
@@ -360,6 +501,19 @@ function getOptionalNumberField(
   if (fieldValue === undefined) return undefined;
   if (typeof fieldValue !== "number" || !Number.isFinite(fieldValue)) {
     return `${field} must be a number`;
+  }
+
+  return fieldValue;
+}
+
+function getOptionalBooleanField(
+  value: Record<string, unknown>,
+  field: string
+): boolean | undefined | string {
+  const fieldValue = value[field];
+  if (fieldValue === undefined) return undefined;
+  if (typeof fieldValue !== "boolean") {
+    return `${field} must be a boolean`;
   }
 
   return fieldValue;
