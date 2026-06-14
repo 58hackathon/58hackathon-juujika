@@ -223,6 +223,7 @@ function toWarehouseItem(
   return {
     ...item,
     listingType: "warehouse",
+    warehouseUseCase,
     warehouseUseCases: warehouseUseCases.includes(warehouseUseCase)
       ? warehouseUseCases
       : [...warehouseUseCases, warehouseUseCase],

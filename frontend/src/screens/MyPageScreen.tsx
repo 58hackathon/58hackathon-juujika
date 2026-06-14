@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ConfirmationNotice from "../components/ConfirmationNotice";
 import { addItemToWarehouse, getItems } from "../features/items/itemApi";
 import type { Item, ItemWarehouseUseCase } from "../features/items/itemTypes";
 import { getTradeRequests } from "../features/tradeRequests/tradeRequestApi";
@@ -14,6 +15,11 @@ type MyPageScreenProps = {
     onLogout: () => void;
 };
 
+type PendingWarehouseConfirmation = {
+    item: Item;
+    warehouseUseCase: ItemWarehouseUseCase;
+};
+
 function MyPageScreen({
     currentUser,
     favoriteItemIds,
@@ -22,6 +28,8 @@ function MyPageScreen({
 }: MyPageScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [tradeRequests, setTradeRequests] = useState<TradeRequest[]>([]);
+    const [pendingWarehouseConfirmation, setPendingWarehouseConfirmation] =
+        useState<PendingWarehouseConfirmation | null>(null);
     const [updatingWarehouseAction, setUpdatingWarehouseAction] = useState("");
 
     useEffect(() => {
@@ -54,6 +62,7 @@ function MyPageScreen({
     ) => {
         const actionId = `${item.id}_${warehouseUseCase}`;
         setUpdatingWarehouseAction(actionId);
+        setPendingWarehouseConfirmation(null);
 
         try {
             const updatedItem = await addItemToWarehouse({ item, warehouseUseCase });
@@ -66,6 +75,9 @@ function MyPageScreen({
             setUpdatingWarehouseAction("");
         }
     };
+    const warehouseConfirmationContent = pendingWarehouseConfirmation
+        ? getWarehouseConfirmationContent(pendingWarehouseConfirmation.warehouseUseCase)
+        : undefined;
 
     return (
         <section className="my-page-screen">
@@ -158,7 +170,7 @@ function MyPageScreen({
                                         isUpdating={updatingWarehouseAction === `${item.id}_ai_route`}
                                         item={item}
                                         label="AI倉庫"
-                                        onAddToWarehouse={handleAddToWarehouse}
+                                        onRequestConfirmation={setPendingWarehouseConfirmation}
                                         warehouseUseCase="ai_route"
                                     />
                                     <WarehouseButton
@@ -166,7 +178,7 @@ function MyPageScreen({
                                         isUpdating={updatingWarehouseAction === `${item.id}_gacha`}
                                         item={item}
                                         label="ガチャ倉庫"
-                                        onAddToWarehouse={handleAddToWarehouse}
+                                        onRequestConfirmation={setPendingWarehouseConfirmation}
                                         warehouseUseCase="gacha"
                                     />
                                 </div>
@@ -225,6 +237,36 @@ function MyPageScreen({
                     <p className="my-page-empty">受信したリクエストはまだありません。</p>
                 )}
             </section>
+
+            {pendingWarehouseConfirmation && warehouseConfirmationContent && (
+                <ConfirmationNotice
+                    confirmLabel={`${warehouseConfirmationContent.label}に入れる`}
+                    description={warehouseConfirmationContent.description}
+                    details={[
+                        {
+                            label: "商品",
+                            value: pendingWarehouseConfirmation.item.title,
+                        },
+                        {
+                            label: "登録先",
+                            value: warehouseConfirmationContent.label,
+                        },
+                        {
+                            label: "価格",
+                            value: `¥${pendingWarehouseConfirmation.item.price.toLocaleString()}`,
+                        },
+                    ]}
+                    isOpen={Boolean(pendingWarehouseConfirmation)}
+                    onCancel={() => setPendingWarehouseConfirmation(null)}
+                    onConfirm={() =>
+                        void handleAddToWarehouse(
+                            pendingWarehouseConfirmation.item,
+                            pendingWarehouseConfirmation.warehouseUseCase
+                        )
+                    }
+                    title={`${warehouseConfirmationContent.label}へ登録しますか？`}
+                />
+            )}
         </section>
     );
 }
@@ -234,14 +276,14 @@ function WarehouseButton({
     isUpdating,
     item,
     label,
-    onAddToWarehouse,
+    onRequestConfirmation,
     warehouseUseCase,
 }: {
     isDisabled: boolean;
     isUpdating: boolean;
     item: Item;
     label: string;
-    onAddToWarehouse: (item: Item, warehouseUseCase: ItemWarehouseUseCase) => void;
+    onRequestConfirmation: (confirmation: PendingWarehouseConfirmation) => void;
     warehouseUseCase: ItemWarehouseUseCase;
 }) {
     const isRegistered = item.warehouseUseCases?.includes(warehouseUseCase) === true;
@@ -254,12 +296,31 @@ function WarehouseButton({
                     : "my-page-warehouse-button"
             }
             disabled={isRegistered || isDisabled}
-            onClick={() => onAddToWarehouse(item, warehouseUseCase)}
+            onClick={() => onRequestConfirmation({ item, warehouseUseCase })}
             type="button"
         >
             {isUpdating ? "登録中..." : isRegistered ? `${label}入り` : `${label}へ`}
         </button>
     );
+}
+
+function getWarehouseConfirmationContent(warehouseUseCase: ItemWarehouseUseCase): {
+    description: string;
+    label: string;
+} {
+    if (warehouseUseCase === "ai_route") {
+        return {
+            label: "AI倉庫",
+            description:
+                "この商品をAI提案の交換ルート候補として使えるようにします。登録後はAI提案候補として扱われます。",
+        };
+    }
+
+    return {
+        label: "ガチャ倉庫",
+        description:
+            "この商品をわらしべガチャの抽選候補として使えるようにします。登録後は同価格帯ガチャの対象になります。",
+    };
 }
 
 function getItemStatusLabel(status: Item["status"]): string {

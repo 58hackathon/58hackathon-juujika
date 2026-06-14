@@ -19,6 +19,7 @@ export type Item = {
   price: number;
   listingType: ItemListingType;
   warehouseUseCase?: ItemWarehouseUseCase;
+  warehouseUseCases?: ItemWarehouseUseCase[];
   createdAt: string;
 };
 
