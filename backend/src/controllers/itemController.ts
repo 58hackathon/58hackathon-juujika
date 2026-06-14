@@ -1,13 +1,14 @@
 import type { Request, Response } from "express";
 
 import {
+  addItemToWarehouse,
   createItem,
   getGachaItem as getGachaItemResult,
   getItemById,
   getItems,
   ItemServiceError,
 } from "../services/itemService.js";
-import type { ItemGachaInput } from "../models/item.js";
+import type { ItemGachaInput, ItemWarehouseUseCase } from "../models/item.js";
 
 const requiredCreateItemFields = [
   "title",
@@ -104,6 +105,30 @@ export async function postItem(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function patchItemWarehouseUseCases(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const id = getRouteParam(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "id is required" });
+    return;
+  }
+
+  const warehouseUseCase = getItemWarehouseUseCase(req.body.warehouseUseCase);
+  if (!warehouseUseCase) {
+    res.status(400).json({ error: "warehouseUseCase must be ai_route or gacha" });
+    return;
+  }
+
+  try {
+    const item = await addItemToWarehouse(id, { warehouseUseCase });
+    res.json({ data: item });
+  } catch (error) {
+    sendItemError(res, error);
+  }
+}
+
 function getRouteParam(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
@@ -192,6 +217,10 @@ function getWarehouseUseCases(value: unknown): Array<"ai_route" | "gacha"> {
     (useCase): useCase is "ai_route" | "gacha" =>
       useCase === "ai_route" || useCase === "gacha"
   );
+}
+
+function getItemWarehouseUseCase(value: unknown): ItemWarehouseUseCase | undefined {
+  return value === "ai_route" || value === "gacha" ? value : undefined;
 }
 
 function sendItemError(res: Response, error: unknown): void {

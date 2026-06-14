@@ -52,6 +52,25 @@ Request:
 }
 ```
 
+### PATCH /items/:id/warehouse-use-cases
+
+商品をAI倉庫またはガチャ倉庫の対象に追加する。
+
+Request:
+
+```json
+{
+  "warehouseUseCase": "ai_route"
+}
+```
+
+warehouseUseCase:
+
+```txt
+ai_route
+gacha
+```
+
 ## Users
 
 ### GET /users

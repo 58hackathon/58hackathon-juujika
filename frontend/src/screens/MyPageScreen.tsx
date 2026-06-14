@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getItems } from "../features/items/itemApi";
-import type { Item } from "../features/items/itemTypes";
+import { addItemToWarehouse, getItems } from "../features/items/itemApi";
+import type { Item, ItemWarehouseUseCase } from "../features/items/itemTypes";
 import { getTradeRequests } from "../features/tradeRequests/tradeRequestApi";
 import type { TradeRequest } from "../features/tradeRequests/tradeRequestTypes";
 import { isCurrentUserResource } from "../features/users/currentUser";
@@ -22,6 +22,7 @@ function MyPageScreen({
 }: MyPageScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [tradeRequests, setTradeRequests] = useState<TradeRequest[]>([]);
+    const [updatingWarehouseAction, setUpdatingWarehouseAction] = useState("");
 
     useEffect(() => {
         const loadMyPageData = async () => {
@@ -46,6 +47,25 @@ function MyPageScreen({
     );
     const visibleRequests =
         receivedRequests.length > 0 ? receivedRequests : tradeRequests.slice(0, 3);
+
+    const handleAddToWarehouse = async (
+        item: Item,
+        warehouseUseCase: ItemWarehouseUseCase
+    ) => {
+        const actionId = `${item.id}_${warehouseUseCase}`;
+        setUpdatingWarehouseAction(actionId);
+
+        try {
+            const updatedItem = await addItemToWarehouse({ item, warehouseUseCase });
+            setItems((currentItems) =>
+                currentItems.map((currentItem) =>
+                    currentItem.id === updatedItem.id ? updatedItem : currentItem
+                )
+            );
+        } finally {
+            setUpdatingWarehouseAction("");
+        }
+    };
 
     return (
         <section className="my-page-screen">
@@ -114,13 +134,42 @@ function MyPageScreen({
                         {myItems.map((item) => (
                             <article className="my-page-item" key={item.id}>
                                 <img src={item.imageUrl} alt="" />
-                                <div>
+                                <div className="my-page-item__content">
                                     <h3>{item.title}</h3>
                                     <p>{item.wantedItem || "交換希望なし"}</p>
+                                    <div className="my-page-warehouse-tags">
+                                        <span>
+                                            {item.listingType === "warehouse" ? "倉庫" : "通常出品"}
+                                        </span>
+                                        {item.warehouseUseCases?.includes("ai_route") && (
+                                            <span>AI倉庫</span>
+                                        )}
+                                        {item.warehouseUseCases?.includes("gacha") && (
+                                            <span>ガチャ倉庫</span>
+                                        )}
+                                    </div>
                                 </div>
-                                <span className={`my-page-status my-page-status--${item.status}`}>
-                                    {getItemStatusLabel(item.status)}
-                                </span>
+                                <div className="my-page-item__actions">
+                                    <span className={`my-page-status my-page-status--${item.status}`}>
+                                        {getItemStatusLabel(item.status)}
+                                    </span>
+                                    <WarehouseButton
+                                        isDisabled={updatingWarehouseAction.startsWith(`${item.id}_`)}
+                                        isUpdating={updatingWarehouseAction === `${item.id}_ai_route`}
+                                        item={item}
+                                        label="AI倉庫"
+                                        onAddToWarehouse={handleAddToWarehouse}
+                                        warehouseUseCase="ai_route"
+                                    />
+                                    <WarehouseButton
+                                        isDisabled={updatingWarehouseAction.startsWith(`${item.id}_`)}
+                                        isUpdating={updatingWarehouseAction === `${item.id}_gacha`}
+                                        item={item}
+                                        label="ガチャ倉庫"
+                                        onAddToWarehouse={handleAddToWarehouse}
+                                        warehouseUseCase="gacha"
+                                    />
+                                </div>
                             </article>
                         ))}
                     </div>
@@ -177,6 +226,39 @@ function MyPageScreen({
                 )}
             </section>
         </section>
+    );
+}
+
+function WarehouseButton({
+    isDisabled,
+    isUpdating,
+    item,
+    label,
+    onAddToWarehouse,
+    warehouseUseCase,
+}: {
+    isDisabled: boolean;
+    isUpdating: boolean;
+    item: Item;
+    label: string;
+    onAddToWarehouse: (item: Item, warehouseUseCase: ItemWarehouseUseCase) => void;
+    warehouseUseCase: ItemWarehouseUseCase;
+}) {
+    const isRegistered = item.warehouseUseCases?.includes(warehouseUseCase) === true;
+
+    return (
+        <button
+            className={
+                isRegistered
+                    ? "my-page-warehouse-button my-page-warehouse-button--active"
+                    : "my-page-warehouse-button"
+            }
+            disabled={isRegistered || isDisabled}
+            onClick={() => onAddToWarehouse(item, warehouseUseCase)}
+            type="button"
+        >
+            {isUpdating ? "登録中..." : isRegistered ? `${label}入り` : `${label}へ`}
+        </button>
     );
 }
 

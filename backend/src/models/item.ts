@@ -38,6 +38,10 @@ export type CreateItemInput = {
   imageUrls?: string[];
 };
 
+export type AddItemToWarehouseInput = {
+  warehouseUseCase: ItemWarehouseUseCase;
+};
+
 export type ItemGachaInput = {
   userId?: string;
   excludeItemId?: string;
