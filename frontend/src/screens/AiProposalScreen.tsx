@@ -9,6 +9,7 @@ import "./AiProposalScreen.css";
 
 type AiProposalScreenProps = {
     currentUser: RegisteredUser;
+    favoriteItemIds: string[];
 };
 
 type AiMode = "guided" | "auto";
@@ -40,7 +41,7 @@ const fallbackImageUrl = "/images/demo/generated/reading-card-500.png";
 const savedRouteStorageKeyPrefix = "warashibe.savedAiRoutes";
 const maxSavedRoutes = 8;
 
-function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
+function AiProposalScreen({ currentUser, favoriteItemIds }: AiProposalScreenProps) {
     const [items, setItems] = useState<Item[]>([]);
     const [mode, setMode] = useState<AiMode>("guided");
     const [guidedSourceItemId, setGuidedSourceItemId] = useState("");
@@ -76,14 +77,36 @@ function AiProposalScreen({ currentUser }: AiProposalScreenProps) {
         return filteredItems.length > 0 ? filteredItems : items;
     }, [items]);
 
-    const guidedGoalItems = items.filter((item) => item.id !== guidedSourceItemId);
+    const favoriteGoalItems = useMemo(() => {
+        const favoriteItemIdSet = new Set(favoriteItemIds);
+
+        return items.filter((item) => favoriteItemIdSet.has(item.id));
+    }, [favoriteItemIds, items]);
+
+    const guidedGoalItems = favoriteGoalItems.filter((item) => item.id !== guidedSourceItemId);
     const guidedSourceItem = findItem(items, guidedSourceItemId);
     const guidedGoalItem = findItem(items, guidedGoalItemId);
     const hasGuidedSelection = Boolean(guidedSourceItem && guidedGoalItem);
-    const autoGoalItems = items.filter((item) => item.id !== autoSourceItemId);
+    const autoGoalItems = favoriteGoalItems.filter((item) => item.id !== autoSourceItemId);
     const autoSourceItem = findItem(items, autoSourceItemId);
     const autoGoalItem = findItem(items, autoGoalItemId);
     const hasAutoSelection = Boolean(autoSourceItem && autoGoalItem);
+
+    useEffect(() => {
+        if (
+            guidedGoalItemId &&
+            !favoriteGoalItems.some((item) => item.id === guidedGoalItemId)
+        ) {
+            setGuidedGoalItemId("");
+        }
+
+        if (
+            autoGoalItemId &&
+            !favoriteGoalItems.some((item) => item.id === autoGoalItemId)
+        ) {
+            setAutoGoalItemId("");
+        }
+    }, [autoGoalItemId, favoriteGoalItems, guidedGoalItemId]);
 
     useEffect(() => {
         if (!guidedSourceItemId || !guidedGoalItemId || items.length === 0) {

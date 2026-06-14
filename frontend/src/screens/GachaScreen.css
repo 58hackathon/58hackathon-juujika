@@ -235,17 +235,6 @@
     box-shadow: 5px 5px 0 rgba(36, 87, 255, 0.95);
 }
 
-.gacha-screen__price-band span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: #ffffff;
-    color: #080b12;
-    font-size: 12px;
-    font-weight: 950;
-}
 
 .gacha-screen__price-band strong {
     min-width: 0;
@@ -253,6 +242,41 @@
     font-size: 18px;
     overflow-wrap: anywhere;
     text-align: right;
+}
+.gacha-screen__price-band-before {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 12px;
+    border: 3px solid #080b12;
+    border-radius: 14px;
+    background: #caff16;
+    box-shadow: 5px 5px 0 rgba(36, 87, 255, 0.85);
+}
+
+.gacha-screen__price-band-before strong {
+    min-width: 0;
+    color: #080b12;
+    font-size: 18px;
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+.gacha-screen__price-band--pending {
+    border-color: #d9e2ef;
+    background: #f3f7fb;
+    box-shadow: 5px 5px 0 rgba(148, 163, 184, 0.24);
+    opacity: 0.64;
+}
+
+.gacha-screen__price-band--pending span {
+    background: #e8eef6;
+    color: #64748b;
+}
+
+.gacha-screen__price-band--pending strong {
+    color: #64748b;
 }
 
 .gacha-screen__category-row {

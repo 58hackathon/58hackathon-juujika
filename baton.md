@@ -6,8 +6,9 @@
 - `frontend/src/screens/AiProposalScreen.tsx` と `frontend/src/screens/AiProposalScreen.css` に、2つのモードを持つAI提案画面を実装済み。
 - 交換ルートの各ステップカードに価格表示を追加済み。
 - ナビモードとオートモードの商品選択状態を独立化済み。
+- ガチャ画面で、交換に出す商品が未選択の間は価格帯カードを薄く表示するように変更済み。
 - `npm run build` は成功済み。
-- Vite dev server は `http://127.0.0.1:5174/` で確認していた。
+- Vite dev server は `http://localhost:5173/` または `http://127.0.0.1:5174/` で動いていることがある。現在のブラウザコメントは `http://localhost:5173/`。
 - UIモックは `outputs/ai-mode-mockups/` に作成済み。
 
 ## 2. 進行中の作業
@@ -15,8 +16,10 @@
 - 作業中ファイル:
   - `frontend/src/screens/AiProposalScreen.tsx`
   - `frontend/src/screens/AiProposalScreen.css`
+  - `frontend/src/screens/GachaScreen.tsx`
+  - `frontend/src/screens/GachaScreen.css`
   - `outputs/ai-mode-mockups/`
-- `git status --short` では上記以外に、既存の対象外変更として `frontend/src/features/items/gachaPriceBands.ts` と `frontend/src/screens/HomeScreen.css` が残っていた。ユーザー変更の可能性があるので触らない。
+- `git status --short` では、既存の対象外変更として `frontend/src/App.tsx` と `frontend/src/screens/AiProposalScreen.tsx` が残っていた。ユーザー変更や前作業の可能性があるので、今回のガチャ修正では戻さない。
 
 ## 3. 次にやること
 - まずユーザーに実画面を確認してもらう。
@@ -25,6 +28,7 @@
   - `cd frontend`
   - `npm run build`
 - 表示確認が必要な場合は Browser plugin で `http://127.0.0.1:5174/` を開き、PC幅とモバイル幅の両方を確認する。
+- ガチャ画面の表示確認は `http://localhost:5173/` の可能性もある。
 - 今回の検証時、Browser上では商品一覧からナビボタンを押しても `data-current-screen="home"` のまま変わらない状態があった。コード上の変更と `npm run build` は成功しているが、実画面確認はユーザー側操作か新しいブラウザセッションで再確認する。
 - バックエンドAPI接続が必要になった場合は、実装せずに必要なprops/API契約だけをフロント側コメントまたは型として整理する。
 
@@ -36,6 +40,7 @@
 - オートモードでは、高額商品との自動交換を検知しても勝手に停止しない。
 - オートモードが止まる条件は、ユーザーが手動で停止ボタンを押した時だけ。
 - 交換ルートのステップカードは `商品名 / 価格 / 開始商品・提案中・目標` の順で表示する。
+- ガチャ画面の価格帯カードは、商品未選択時に `gacha-screen__price-band--pending` を付与して淡い見た目にする。
 - 「倉庫」はユーザー所有品の置き場ではなく、AI提案やガチャ交換で使うサービス管理の商品倉庫を指す。
 - 倉庫を使う目的は、交換ルートが長くなった時に毎回発送対応が発生する煩わしさを避けること。
 - ユーザー同士の1対1取引では倉庫を使わない。

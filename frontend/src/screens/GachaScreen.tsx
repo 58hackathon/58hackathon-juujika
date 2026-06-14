@@ -227,8 +227,14 @@ function GachaScreen({ currentUser }: GachaScreenProps) {
                         <span>2</span>
                         <h2>交換条件を確認</h2>
                     </div>
-                    <div className="gacha-screen__price-band">
-                        <span>同価格帯OK</span>
+                    <div
+                        className={[
+                            selectedCategory === allCategoriesValue
+                                ? "gacha-screen__price-band-before"
+                                : "gacha-screen__price-band",
+                            !sourceItem ? "gacha-screen__price-band--pending" : "",
+                        ].filter(Boolean).join(" ")}
+                    >
                         <strong>{priceBand?.label ?? "未選択"}</strong>
                     </div>
 

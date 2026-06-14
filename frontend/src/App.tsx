@@ -248,7 +248,10 @@ function App() {
       )}
 
       {currentUser && currentScreen === "aiProposal" && (
-        <AiProposalScreen currentUser={currentUser} />
+        <AiProposalScreen
+          currentUser={currentUser}
+          favoriteItemIds={favoriteItemIds}
+        />
       )}
 
     </main>
