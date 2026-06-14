@@ -32,16 +32,16 @@ const listingFilters: ListingFilterOption[] = [
         emptyLabel: "通常出品",
     },
     {
-        label: "AI提案候補",
+        label: "AI候補",
         value: "aiWarehouse",
         description: "AIが交換ルートを作る時に利用する倉庫商品です。",
-        emptyLabel: "AI提案候補",
+        emptyLabel: "AI候補",
     },
     {
-        label: "ガチャ提案候補",
+        label: "ガチャ候補",
         value: "gachaWarehouse",
         description: "ガチャ交換の抽選対象として利用する倉庫商品です。",
-        emptyLabel: "ガチャ提案候補",
+        emptyLabel: "ガチャ候補",
     },
 ];
 
