@@ -16,7 +16,7 @@ type GeminiGenerateContentResponse = {
 };
 
 const apiKey = process.env.GEMINI_API_KEY?.trim();
-const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
+const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
 
 if (!apiKey || apiKey === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
   console.error("NG: GEMINI_API_KEY is not configured in backend/.env");
